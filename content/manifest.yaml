@@ -1,0 +1,15 @@
+schemaVersion: 1
+product: northstar-platform
+pages:
+  - id: overview
+    source: markdown/overview.md
+  - id: concepts/cluster-profiles
+    source: markdown/concepts/cluster-profiles.md
+  - id: concepts/environments
+    source: markdown/concepts/environments.md
+  - id: guides/create-environment
+    source: markdown/guides/create-environment.md
+  - id: reference/api-conventions
+    source: markdown/reference/api-conventions.md
+  - id: reference/style-guide
+    source: markdown/reference/style-guide.md

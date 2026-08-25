@@ -1,0 +1,10 @@
+.DS_Store
+.cache/
+.venv/
+node_modules/
+dist/
+build/
+site/
+_build/
+.docusaurus/
+*.log
