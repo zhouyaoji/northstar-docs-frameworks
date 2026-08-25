@@ -6,6 +6,7 @@ docs_dir: docs
 theme:
   name: mkdocs
 nav:
+  - All renderers: https://zhouyaoji.github.io/northstar-docs-frameworks/
   - Home: index.md
   - Overview: overview.md
   - Concepts:
