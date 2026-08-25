@@ -1,0 +1,36 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Northstar documentation renderers</title>
+    <style>
+      :root { color-scheme: light dark; font-family: system-ui, sans-serif; }
+      body { margin: 0; background: #071525; color: #ecf5ff; }
+      main { max-width: 960px; margin: auto; padding: 5rem 1.5rem; }
+      h1 { font-size: clamp(2.3rem, 7vw, 4.8rem); margin: 0 0 1rem; line-height: 1; }
+      .lead { max-width: 720px; color: #b9cee3; font-size: 1.2rem; }
+      .grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(210px, 1fr)); gap: 1rem; margin-top: 3rem; }
+      a.card { display: block; padding: 1.4rem; color: inherit; text-decoration: none; border: 1px solid #31506c; border-radius: 14px; background: #0c2034; }
+      a.card:hover { border-color: #6bd4ff; transform: translateY(-2px); }
+      .card strong { color: #6bd4ff; font-size: 1.15rem; }
+      .card span { display: block; margin-top: .55rem; color: #b9cee3; }
+      footer { margin-top: 3rem; color: #89a6bf; }
+      footer a { color: #9ddfff; }
+    </style>
+  </head>
+  <body>
+    <main>
+      <p>ONE FICTIONAL PRODUCT · FOUR DOCUMENTATION STACKS</p>
+      <h1>Northstar, rendered four ways.</h1>
+      <p class="lead">Compare how the same platform documentation behaves in Docusaurus, MkDocs, Sphinx with reStructuredText, and Sphinx with MyST Markdown.</p>
+      <section class="grid" aria-label="Documentation renderers">
+        <a class="card" href="./docusaurus/"><strong>Docusaurus</strong><span>React-based documentation using shared Markdown.</span></a>
+        <a class="card" href="./mkdocs/"><strong>MkDocs</strong><span>Python documentation using shared Markdown.</span></a>
+        <a class="card" href="./sphinx-rest/"><strong>Sphinx + reST</strong><span>Traditional Sphinx with reStructuredText.</span></a>
+        <a class="card" href="./sphinx-myst/"><strong>Sphinx + MyST</strong><span>Sphinx consuming Markdown through MyST.</span></a>
+      </section>
+      <footer>Source: <a href="https://github.com/zhouyaoji/northstar-docs-frameworks">zhouyaoji/northstar-docs-frameworks</a></footer>
+    </main>
+  </body>
+</html>

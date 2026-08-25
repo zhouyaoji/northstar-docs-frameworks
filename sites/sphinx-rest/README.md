@@ -1,5 +1,8 @@
 # Sphinx reStructuredText adapter
 
-- Source format: reStructuredText
-- Planned public path: `/sphinx-rest/`
-- Status: configuration pending
+This adapter renders the equivalent reStructuredText files in
+`content/restructuredtext`.
+
+```bash
+sphinx-build -W --keep-going -b html -c sites/sphinx-rest content/restructuredtext public/sphinx-rest
+```

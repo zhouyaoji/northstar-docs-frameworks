@@ -1,6 +1,7 @@
 ---
 title: Northstar Platform overview
 page_id: overview
+slug: /
 ---
 
 # Northstar Platform overview
