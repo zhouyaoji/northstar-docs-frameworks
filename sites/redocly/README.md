@@ -1,5 +1,5 @@
 # Redocly adapter
 
-- Source format: Markdown or Markdoc
-- Planned public path: `/redocly/` when the selected hosting method permits it
-- Status: configuration pending
+- Source format: OpenAPI 3.1 YAML
+- Public path: `/redocly/`
+- Build: `npm run build`

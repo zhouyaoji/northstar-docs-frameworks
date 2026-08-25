@@ -1,0 +1,12 @@
+= Cluster profiles
+
+A cluster profile is a reusable set of defaults for compute, networking, observability, and policy. Profiles help platform teams offer a paved road without hiding the underlying settings.
+
+Each profile has a stable identifier, a display name, a cloud provider, a region, and capacity limits. Environments reference the identifier so a profile can evolve without changing every environment definition.
+
+== Why profiles help
+
+* Teams start from reviewed defaults.
+* Platform owners can update common settings centrally.
+* Environment definitions stay short and auditable.
+

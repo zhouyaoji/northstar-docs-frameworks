@@ -1,0 +1,16 @@
+site:
+  title: Northstar Platform Docs
+  start_page: northstar::index.adoc
+  url: https://zhouyaoji.github.io/northstar-docs-frameworks/antora/
+content:
+  sources:
+    - url: ../..
+      branches: HEAD
+      start_path: content/asciidoc
+ui:
+  bundle:
+    url: https://gitlab.com/antora/antora-ui-default/-/jobs/artifacts/master/raw/build/ui-bundle.zip?job=bundle-stable
+    snapshot: true
+output:
+  dir: ../../public/antora
+

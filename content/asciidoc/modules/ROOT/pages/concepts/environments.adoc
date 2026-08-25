@@ -1,0 +1,16 @@
+= Environments
+
+An environment combines a cluster profile with a lifecycle stage and ownership metadata. Northstar uses the definition to create consistent development, staging, and production targets.
+
+Environment names are unique within a project. The `profileId` points to a cluster profile, while `stage` controls policy defaults.
+
+[source,json]
+----
+{
+  "name": "payments-staging",
+  "profileId": "aws-us-west-small",
+  "stage": "staging",
+  "owner": "payments-platform"
+}
+----
+

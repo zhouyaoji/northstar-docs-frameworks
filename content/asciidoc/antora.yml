@@ -1,0 +1,7 @@
+name: northstar
+title: Northstar Platform
+version: ~
+start_page: ROOT:index.adoc
+nav:
+  - modules/ROOT/nav.adoc
+
