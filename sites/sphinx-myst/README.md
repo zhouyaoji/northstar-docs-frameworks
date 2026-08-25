@@ -1,5 +1,8 @@
 # Sphinx MyST adapter
 
-- Source format: MyST Markdown
-- Planned public path: `/sphinx-myst/`
-- Status: configuration pending
+The build copies the shared Markdown into this adapter's ignored `content/`
+directory. MyST then renders the same prose through Sphinx.
+
+```bash
+./tools/build-sites.sh
+```

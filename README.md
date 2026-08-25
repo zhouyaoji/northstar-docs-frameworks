@@ -8,11 +8,11 @@ small, inspectable comparison rather than as a production product site.
 
 | Site | Primary source format | Status |
 | --- | --- | --- |
-| Docusaurus | MDX | Scaffolded |
+| Docusaurus | Markdown | Deployable |
 | Redocly | Markdown or Markdoc | Scaffolded |
-| MkDocs | Markdown | Scaffolded |
-| Sphinx | reStructuredText | Scaffolded |
-| Sphinx with MyST | MyST Markdown | Scaffolded |
+| MkDocs | Markdown | Deployable |
+| Sphinx | reStructuredText | Deployable |
+| Sphinx with MyST | MyST Markdown | Deployable |
 | Mintlify | MDX | Scaffolded |
 | Antora | AsciiDoc | Scaffolded |
 
@@ -32,9 +32,9 @@ assistant/     Reserved for a future framework-neutral docs assistant
 
 ## Publishing plan
 
-The first deployment milestone will build each static site independently, copy
-the results beneath a common output directory, and deploy that single artifact
-to GitHub Pages. A landing page will link to each renderer.
+The Pages workflow builds each static site independently, copies the results
+beneath a common output directory, and deploys that single artifact to GitHub
+Pages. A landing page links to each renderer.
 
 The AIPP source and assistant are intentionally deferred. Their reserved
 directories document the intended boundaries so they can be added without a

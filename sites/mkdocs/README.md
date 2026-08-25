@@ -1,5 +1,7 @@
 # MkDocs adapter
 
-- Source format: Markdown
-- Planned public path: `/mkdocs/`
-- Status: configuration pending
+This adapter reads `content/markdown` directly.
+
+```bash
+mkdocs build --strict --config-file sites/mkdocs/mkdocs.yml
+```

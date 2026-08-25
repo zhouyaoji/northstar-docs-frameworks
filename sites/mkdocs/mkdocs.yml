@@ -1,0 +1,18 @@
+site_name: Northstar Platform Docs
+site_description: The MkDocs rendering of the shared Northstar content
+site_url: https://zhouyaoji.github.io/northstar-docs-frameworks/mkdocs/
+repo_url: https://github.com/zhouyaoji/northstar-docs-frameworks
+docs_dir: docs
+theme:
+  name: mkdocs
+nav:
+  - Home: index.md
+  - Overview: overview.md
+  - Concepts:
+      - Cluster profiles: concepts/cluster-profiles.md
+      - Environments: concepts/environments.md
+  - Guides:
+      - Create an environment: guides/create-environment.md
+  - Reference:
+      - API conventions: reference/api-conventions.md
+      - Documentation style guide: reference/style-guide.md
