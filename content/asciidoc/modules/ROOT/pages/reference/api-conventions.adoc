@@ -1,0 +1,25 @@
+= API conventions
+
+The fictional Northstar API uses JSON over HTTPS and resource-oriented URLs beneath `/v1`.
+
+== Authentication
+
+Send an OAuth 2.0 bearer token in the `Authorization` header.
+
+== Errors
+
+Errors contain a stable code, a readable message, and an optional request identifier.
+
+[source,json]
+----
+{
+  "code": "profile_not_found",
+  "message": "The selected cluster profile does not exist.",
+  "requestId": "req_01JNS"
+}
+----
+
+== Pagination
+
+List operations accept `limit` and `cursor`. The response includes `nextCursor` when more results are available.
+

@@ -1,0 +1,10 @@
+= Documentation style guide
+
+Northstar documentation uses direct, task-oriented language.
+
+* Use sentence-style capitalization for headings.
+* Lead procedures with the user goal.
+* Put commands and identifiers in monospace.
+* Use examples that remain consistent across renderers.
+* Mark the product and API as fictional.
+

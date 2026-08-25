@@ -1,0 +1,196 @@
+openapi: 3.1.0
+info:
+  title: Northstar Platform API
+  version: 1.0.0
+  summary: Manage fictional Northstar environments and cluster profiles.
+  description: |
+    The Northstar Platform API is a fictional API used to compare documentation tools.
+    Use it to list cluster profiles and create or inspect application environments.
+  license:
+    name: MIT
+    identifier: MIT
+servers:
+  - url: https://api.northstar.example/v1
+    description: Fictional production endpoint
+security:
+  - bearerAuth: []
+tags:
+  - name: Cluster profiles
+    description: Reusable infrastructure defaults.
+  - name: Environments
+    description: Application deployment targets.
+paths:
+  /cluster-profiles:
+    get:
+      operationId: listClusterProfiles
+      summary: List cluster profiles
+      tags: [Cluster profiles]
+      responses:
+        '200':
+          description: Available cluster profiles
+          content:
+            application/json:
+              schema:
+                type: object
+                required: [items]
+                properties:
+                  items:
+                    type: array
+                    items:
+                      $ref: '#/components/schemas/ClusterProfile'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+  /projects/{projectId}/environments:
+    parameters:
+      - $ref: '#/components/parameters/ProjectId'
+    get:
+      operationId: listEnvironments
+      summary: List environments
+      tags: [Environments]
+      responses:
+        '200':
+          description: Project environments
+          content:
+            application/json:
+              schema:
+                type: object
+                required: [items]
+                properties:
+                  items:
+                    type: array
+                    items:
+                      $ref: '#/components/schemas/Environment'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+    post:
+      operationId: createEnvironment
+      summary: Create an environment
+      tags: [Environments]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CreateEnvironmentRequest'
+      responses:
+        '201':
+          description: Environment created
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Environment'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+  /projects/{projectId}/environments/{environmentId}:
+    parameters:
+      - $ref: '#/components/parameters/ProjectId'
+      - name: environmentId
+        in: path
+        required: true
+        description: Stable environment identifier.
+        schema:
+          type: string
+    get:
+      operationId: getEnvironment
+      summary: Get an environment
+      tags: [Environments]
+      responses:
+        '200':
+          description: Environment details
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Environment'
+        '404':
+          description: Environment not found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+components:
+  securitySchemes:
+    bearerAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT
+  parameters:
+    ProjectId:
+      name: projectId
+      in: path
+      required: true
+      description: Project that owns the environments.
+      schema:
+        type: string
+  responses:
+    BadRequest:
+      description: Invalid request
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/Error'
+    Unauthorized:
+      description: Missing or invalid bearer token
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/Error'
+  schemas:
+    ClusterProfile:
+      type: object
+      required: [id, name, provider, region]
+      properties:
+        id:
+          type: string
+          examples: [aws-us-west-small]
+        name:
+          type: string
+          examples: [AWS US West Small]
+        provider:
+          type: string
+          enum: [aws, azure, gcp]
+        region:
+          type: string
+          examples: [us-west-2]
+    CreateEnvironmentRequest:
+      type: object
+      required: [name, profileId, stage]
+      properties:
+        name:
+          type: string
+          examples: [payments-staging]
+        profileId:
+          type: string
+          examples: [aws-us-west-small]
+        stage:
+          $ref: '#/components/schemas/Stage'
+    Environment:
+      allOf:
+        - $ref: '#/components/schemas/CreateEnvironmentRequest'
+        - type: object
+          required: [id, projectId, status]
+          properties:
+            id:
+              type: string
+              examples: [env_01JNS]
+            projectId:
+              type: string
+              examples: [payments]
+            status:
+              type: string
+              enum: [provisioning, ready, failed]
+    Stage:
+      type: string
+      enum: [development, staging, production]
+    Error:
+      type: object
+      required: [code, message]
+      properties:
+        code:
+          type: string
+          examples: [profile_not_found]
+        message:
+          type: string
+          examples: [The selected cluster profile does not exist.]
+        requestId:
+          type: string
+          examples: [req_01JNS]

@@ -9,12 +9,12 @@ small, inspectable comparison rather than as a production product site.
 | Site | Primary source format | Status |
 | --- | --- | --- |
 | Docusaurus | Markdown | Deployable |
-| Redocly | Markdown or Markdoc | Scaffolded |
+| Redocly | OpenAPI 3.1 YAML | Deployable |
 | MkDocs | Markdown | Deployable |
 | Sphinx | reStructuredText | Deployable |
 | Sphinx with MyST | MyST Markdown | Deployable |
 | Mintlify | MDX | Scaffolded |
-| Antora | AsciiDoc | Scaffolded |
+| Antora | AsciiDoc | Deployable |
 
 The initial human-maintained source is in `content/markdown`. Stable page IDs
 are listed in `content/manifest.yaml`. Other format directories are reserved for

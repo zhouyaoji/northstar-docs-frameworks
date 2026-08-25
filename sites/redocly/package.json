@@ -1,0 +1,11 @@
+{
+  "private": true,
+  "scripts": {
+    "lint": "redocly lint openapi.yaml",
+    "build": "redocly build-docs openapi.yaml --template template.hbs --output ../../public/redocly/index.html --title 'Northstar API reference'"
+  },
+  "devDependencies": {
+    "@redocly/cli": "2.47.0"
+  }
+}
+

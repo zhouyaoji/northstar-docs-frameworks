@@ -1,0 +1,24 @@
+= Create an environment
+
+Create an environment after your platform administrator has published a cluster profile.
+
+== Before you begin
+
+You need a project identifier, a valid cluster profile identifier, and permission to create environments in the project.
+
+== Create the environment
+
+. Choose an environment name that identifies the service and lifecycle stage.
+. Send a `POST` request to pass:c[/projects/{projectId}/environments].
+. Store the returned environment identifier for later updates.
+
+[source,bash]
+----
+curl --request POST \
+  --header "Authorization: Bearer $NORTHSTAR_TOKEN" \
+  --header "Content-Type: application/json" \
+  --data '{"name":"payments-staging","profileId":"aws-us-west-small","stage":"staging"}' \
+  https://api.northstar.example/v1/projects/payments/environments
+----
+
+Northstar returns `201 Created` when the environment definition is accepted.
