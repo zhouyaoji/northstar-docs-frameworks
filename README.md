@@ -73,10 +73,14 @@ The build job runs these stages in order:
    images resolve inside `public/`. External URLs are not requested during this
    check, so the result is deterministic and does not depend on another site
    being available.
-7. **Publish an artifact.** Pull requests retain `public/` as a downloadable
+7. **Generate AI-readable exports.** `tools/generate-llms.py` uses the content
+   manifest and canonical Markdown to create `llms.txt` and `llms-full.txt` at
+   the site root and beneath every deployed renderer path. The Redocly export
+   also publishes the source OpenAPI file.
+8. **Publish an artifact.** Pull requests retain `public/` as a downloadable
    `rendered-documentation` artifact for seven days. This lets a reviewer inspect
    the exact output without deploying it publicly.
-8. **Deploy after merge.** For pushes to `main`, the build job uploads a GitHub
+9. **Deploy after merge.** For pushes to `main`, the build job uploads a GitHub
    Pages artifact. A separate deployment job runs only after the build succeeds
    and publishes that artifact to the `github-pages` environment.
 
@@ -256,6 +260,19 @@ and source path for all three maintained formats. CI then verifies coverage and
 title parity before any renderer starts. A change to existing content needs no
 manual deployment action: opening a pull request renders and validates it, and
 merging the passing pull request causes the `main` deployment.
+
+### AI-readable exports
+
+The project generates one framework-neutral AI index at `/llms.txt`, a combined
+canonical context file at `/llms-full.txt`, and equivalent files beneath each
+renderer path. A shared generator avoids relying on framework-specific plugins
+and keeps the indexes synchronized with `content/manifest.yaml`.
+
+Set `NORTHSTAR_SITE_URL` when building for a different host or base URL. It
+defaults to the public GitHub Pages project URL. These exports are an
+experimental discovery aid; they supplement normal HTML, navigation, sitemaps,
+and future retrieval evaluation rather than guaranteeing that an AI system will
+index or use the content.
 
 The AIPP source and assistant are intentionally deferred. Their reserved
 directories document the intended boundaries so they can be added without a
