@@ -84,6 +84,125 @@ The dependency between the build and deployment jobs is the release gate: a
 manifest problem, invalid OpenAPI file, renderer warning, build error, or broken
 local link stops deployment. Pull requests never deploy the public site.
 
+### Moving the pipeline to Jenkins or another CI/CD service
+
+GitHub Actions is a CI/CD pipeline engine, not a substitute for one. Jenkins,
+GitLab CI/CD, Azure Pipelines, CircleCI, Buildkite, and other corporate systems
+can run the same Northstar pipeline because the repository keeps its important
+operations in executable scripts rather than embedding them in GitHub-specific
+actions.
+
+The portable pipeline contract is:
+
+```text
+install dependencies
+        ↓
+python tools/validate-content.py
+        ↓
+./tools/build-sites.sh
+        ↓
+python tools/check-built-links.py
+        ↓
+retain public/ as an artifact
+        ↓
+approved main-branch build → deploy public/
+```
+
+To migrate, replace the orchestration in `.github/workflows/pages.yml`, but keep
+the manifest, scripts, pinned dependencies, and `public/` artifact contract. A
+Jenkins Declarative Pipeline could use this structure:
+
+```groovy
+pipeline {
+  agent { label 'linux-node22-python312' }
+
+  stages {
+    stage('Checkout') {
+      steps { checkout scm }
+    }
+
+    stage('Install dependencies') {
+      steps {
+        sh 'npm ci --prefix sites/antora'
+        sh 'npm ci --prefix sites/docusaurus'
+        sh 'npm ci --prefix sites/redocly'
+        sh 'python -m pip install --requirement requirements.txt'
+      }
+    }
+
+    stage('Validate content') {
+      steps { sh 'python tools/validate-content.py' }
+    }
+
+    stage('Render documentation') {
+      steps { sh './tools/build-sites.sh' }
+    }
+
+    stage('Verify rendered site') {
+      steps { sh 'python tools/check-built-links.py' }
+    }
+
+    stage('Publish') {
+      when { branch 'main' }
+      steps {
+        // This script belongs to the company deployment platform. It might
+        // publish to an internal web server, S3, Artifactory, or Kubernetes.
+        sh './company-ci/deploy-docs.sh public'
+      }
+    }
+  }
+
+  post {
+    always {
+      archiveArtifacts artifacts: 'public/**/*', fingerprint: true,
+        allowEmptyArchive: true
+    }
+  }
+}
+```
+
+The example deployment command is intentionally not included in this
+repository because it depends on the company's hosting platform. In a real
+Jenkins installation, the agent image would provide Node.js 22 and Python 3.12,
+or the pipeline would run inside a pinned container image containing those
+runtimes.
+
+The same stages map directly to other services:
+
+| Pipeline concern | GitHub Actions | Jenkins | Other hosted CI systems |
+| --- | --- | --- | --- |
+| Definition | `.github/workflows/pages.yml` | `Jenkinsfile` | Service-specific YAML |
+| Execution environment | GitHub-hosted runner | Managed agent or Kubernetes pod | Hosted or self-hosted runner |
+| Dependency reuse | `setup-node` and `setup-python` caches | Jenkins cache, persistent volume, or artifact proxy | Service cache directives |
+| Pull-request validation | `pull_request` trigger | Multibranch Pipeline | Merge-request or pull-request trigger |
+| Build output | Actions artifact | `archiveArtifacts` or artifact repository | Service artifact feature |
+| Deployment approval | GitHub environment | `input` gate or release job | Protected environment or manual gate |
+| Credentials | GitHub secrets or OIDC | Jenkins Credentials Binding | Secret store or workload identity |
+| Public deployment | GitHub Pages | Company deployment script | Pages, object storage, CDN, or Kubernetes |
+
+A corporate implementation would commonly extend the demonstration with:
+
+- ephemeral containerized agents rather than mutable long-lived build servers;
+- an internal npm and Python package proxy for availability and dependency
+  governance;
+- software-composition analysis, license checks, secret scanning, and a software
+  bill of materials;
+- protected branches, required reviews, and separate development, staging, and
+  production environments;
+- short-lived workload identity or a credential manager rather than secrets in
+  repository files or command-line arguments;
+- artifact promotion, so production receives the exact previously tested
+  `public/` artifact instead of rebuilding source;
+- retention policies, audit logs, notifications, deployment rollback, and
+  service-level monitoring;
+- self-hosted agents when documentation sources, APIs, or deployment targets are
+  available only on the corporate network.
+
+This separation is the main portability feature: the repository defines how to
+validate and render the documentation, while the selected CI/CD service decides
+when and where those commands run, how artifacts are governed, and who may
+approve deployment.
+
 ### Public output paths
 
 The single Pages artifact contains a landing page and one directory per static
