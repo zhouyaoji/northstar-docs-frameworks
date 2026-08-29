@@ -1,0 +1,65 @@
+// Demonstration only: this repository uses GitHub Actions in production.
+pipeline {
+  agent { label 'linux-node22-python312' }
+
+  options {
+    disableConcurrentBuilds()
+    timestamps()
+  }
+
+  stages {
+    stage('Checkout') {
+      steps {
+        checkout scm
+      }
+    }
+
+    stage('Install dependencies') {
+      steps {
+        sh 'npm ci --prefix sites/antora'
+        sh 'npm ci --prefix sites/docusaurus'
+        sh 'npm ci --prefix sites/redocly'
+        sh 'python -m pip install --requirement requirements.txt'
+      }
+    }
+
+    stage('Validate content') {
+      steps {
+        sh 'python tools/validate-content.py'
+      }
+    }
+
+    stage('Render documentation') {
+      steps {
+        sh './tools/build-sites.sh'
+      }
+    }
+
+    stage('Verify rendered site') {
+      steps {
+        sh 'python tools/check-built-links.py'
+      }
+    }
+
+    stage('Deploy') {
+      when {
+        branch 'main'
+      }
+      steps {
+        // Company-owned example: promote the tested public/ artifact rather
+        // than rebuilding it in a separate release job.
+        sh './company-ci/deploy-docs.sh public'
+      }
+    }
+  }
+
+  post {
+    always {
+      archiveArtifacts(
+        artifacts: 'public/**/*',
+        fingerprint: true,
+        allowEmptyArchive: true
+      )
+    }
+  }
+}

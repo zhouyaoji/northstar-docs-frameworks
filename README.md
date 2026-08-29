@@ -112,6 +112,14 @@ To migrate, replace the orchestration in `.github/workflows/pages.yml`, but keep
 the manifest, scripts, pinned dependencies, and `public/` artifact contract. A
 Jenkins Declarative Pipeline could use this structure:
 
+Runnable reference configurations are included as non-active examples:
+
+- `examples/ci/jenkins/Jenkinsfile`
+- `examples/ci/teamcity/settings.kts`
+
+See `examples/ci/README.md` for adoption notes, runtime assumptions, credential
+guidance, and the deployment placeholder used by both examples.
+
 ```groovy
 pipeline {
   agent { label 'linux-node22-python312' }
