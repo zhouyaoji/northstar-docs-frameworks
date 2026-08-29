@@ -1,11 +1,16 @@
 # GitHub Pages workflow
 
-`pages.yml` performs the initial publishing pipeline:
+`pages.yml` performs the publishing pipeline:
 
-1. Build all four supported renderers for pull requests and pushes.
-2. Treat broken links and Sphinx warnings as build failures.
-3. Assemble static outputs beneath their public subpaths.
-4. Deploy one GitHub Pages artifact from `main`.
+1. Install pinned Node.js and Python dependencies with dependency caching.
+2. Validate manifest coverage and titles across the maintained source formats.
+3. Build all six deployable renderers for pull requests and pushes.
+4. Treat invalid OpenAPI, strict-build warnings, and broken local links or
+   assets as build failures.
+5. Retain pull-request output as a seven-day preview artifact.
+6. Assemble static outputs beneath their public subpaths.
+7. Deploy one GitHub Pages artifact only from `main` and only after the build
+   job succeeds.
 
-Redocly and Mintlify may use their native hosted deployments if their static
-outputs cannot be included cleanly in the common artifact.
+See the root `README.md` for the detailed trigger behavior, stage descriptions,
+failure gates, output layout, and local reproduction commands.
