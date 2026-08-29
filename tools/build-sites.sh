@@ -21,5 +21,6 @@ npm run build --prefix "$repo_root/sites/antora"
 mkdocs build --strict --config-file "$repo_root/sites/mkdocs/mkdocs.yml" --site-dir "$public_dir/mkdocs"
 sphinx-build -W --keep-going -b html -c "$repo_root/sites/sphinx-rest" "$repo_root/content/restructuredtext" "$public_dir/sphinx-rest"
 sphinx-build -W --keep-going -b html "$repo_root/sites/sphinx-myst" "$public_dir/sphinx-myst"
+python "$repo_root/tools/generate-llms.py"
 
 touch "$public_dir/.nojekyll"
