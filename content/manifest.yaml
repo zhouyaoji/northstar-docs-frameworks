@@ -2,14 +2,38 @@ schemaVersion: 1
 product: northstar-platform
 pages:
   - id: overview
-    source: markdown/overview.md
+    title: Northstar Platform overview
+    sources:
+      markdown: markdown/overview.md
+      restructuredtext: restructuredtext/overview.rst
+      asciidoc: asciidoc/modules/ROOT/pages/index.adoc
   - id: concepts/cluster-profiles
-    source: markdown/concepts/cluster-profiles.md
+    title: Cluster profiles
+    sources:
+      markdown: markdown/concepts/cluster-profiles.md
+      restructuredtext: restructuredtext/concepts/cluster-profiles.rst
+      asciidoc: asciidoc/modules/ROOT/pages/concepts/cluster-profiles.adoc
   - id: concepts/environments
-    source: markdown/concepts/environments.md
+    title: Environments
+    sources:
+      markdown: markdown/concepts/environments.md
+      restructuredtext: restructuredtext/concepts/environments.rst
+      asciidoc: asciidoc/modules/ROOT/pages/concepts/environments.adoc
   - id: guides/create-environment
-    source: markdown/guides/create-environment.md
+    title: Create an environment
+    sources:
+      markdown: markdown/guides/create-environment.md
+      restructuredtext: restructuredtext/guides/create-environment.rst
+      asciidoc: asciidoc/modules/ROOT/pages/guides/create-environment.adoc
   - id: reference/api-conventions
-    source: markdown/reference/api-conventions.md
+    title: API conventions
+    sources:
+      markdown: markdown/reference/api-conventions.md
+      restructuredtext: restructuredtext/reference/api-conventions.rst
+      asciidoc: asciidoc/modules/ROOT/pages/reference/api-conventions.adoc
   - id: reference/style-guide
-    source: markdown/reference/style-guide.md
+    title: Documentation style guide
+    sources:
+      markdown: markdown/reference/style-guide.md
+      restructuredtext: restructuredtext/reference/style-guide.rst
+      asciidoc: asciidoc/modules/ROOT/pages/reference/style-guide.adoc
