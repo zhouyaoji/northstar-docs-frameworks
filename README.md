@@ -28,8 +28,29 @@ content/       Shared content, organized by markup format
 sites/         Configuration and theme adapters for each generator
 tools/         Build, content-validation, and generated-link tooling
 aipp/          Reserved for a future AI Publication Protocol source
-assistant/     Reserved for a future framework-neutral docs assistant
+assistant/     Shared browser widget and secure model-backed API
 ```
+
+## Documentation assistant
+
+Every generated HTML page receives the same **Ask Northstar** widget. The
+widget identifies the active renderer and sends the question to a separate
+Node API. That API grounds the answer in the renderer's generated `llms.txt`
+and `llms-full.txt`, validates citation URLs against the index, and labels the
+answer as **Documentation** or **Unsupported**. This makes responses comparable
+across all six renderers and establishes the response contract for the future
+AIPP comparison.
+
+GitHub Pages serves only static files, so it cannot safely hold an OpenAI API
+key or execute the model call. Until a server-side endpoint is deployed, the
+widget provides a zero-cost local search of the selected renderer's published
+AI-readable files and clearly identifies its output as matching passages rather
+than an AI-generated answer. Set `NORTHSTAR_ASSISTANT_API_URL` during the site
+build to enable model-backed responses. The key belongs only in the server
+environment.
+
+See `assistant/README.md` for architecture, local commands, deployment
+variables, security controls, and the JSON response contract.
 
 ## CI/CD automation
 

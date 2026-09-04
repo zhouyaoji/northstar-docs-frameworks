@@ -64,8 +64,13 @@ def main() -> int:
     errors: list[str] = []
     pages = sorted(PUBLIC.rglob("*.html"))
     for page in pages:
+        page_text = page.read_text(encoding="utf-8", errors="replace")
+        if "</body>" in page_text and "data-northstar-assistant" not in page_text:
+            errors.append(
+                f"{page.relative_to(PUBLIC)}: documentation assistant was not injected"
+            )
         parser = LinkParser()
-        parser.feed(page.read_text(encoding="utf-8", errors="replace"))
+        parser.feed(page_text)
         for href in parser.links:
             target = link_target(page, href)
             if target is None:
