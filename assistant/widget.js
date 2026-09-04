@@ -13,7 +13,8 @@
   const input = shadow.querySelector("input");
   const result = shadow.querySelector(".result");
   const known = ["docusaurus", "mkdocs", "sphinx-rest", "sphinx-myst", "antora", "redocly"];
-  const renderer = location.pathname.split("/").find((part) => known.includes(part)) || "docusaurus";
+  const renderer = location.pathname.split("/").find((part) => known.includes(part));
+  const siteRoot = new URL("../", current.src);
 
   launch.addEventListener("click", () => {
     panel.classList.toggle("hidden");
@@ -24,12 +25,14 @@
     event.preventDefault();
     const endpoint = window.NORTHSTAR_ASSISTANT_API_URL || "";
     if (!endpoint) {
-      result.innerHTML = "<p><strong>Demo API not configured.</strong> The secure server-side assistant is ready to deploy; setup is documented in <code>assistant/README.md</code>.</p>";
+      result.textContent = "Searching the published documentation…";
+      try { renderLocalResults(await localSearch(input.value)); }
+      catch { result.textContent = "The published documentation index could not be loaded."; }
       return;
     }
     result.textContent = "Checking the documentation…";
     try {
-      const response = await fetch(`${endpoint.replace(/\/$/, "")}/api/ask`, { method: "POST", headers: { "content-type": "application/json" }, body: JSON.stringify({ question: input.value, renderer }) });
+      const response = await fetch(`${endpoint.replace(/\/$/, "")}/api/ask`, { method: "POST", headers: { "content-type": "application/json" }, body: JSON.stringify({ question: input.value, renderer: renderer || "docusaurus" }) });
       const data = await response.json();
       if (!response.ok) throw new Error(data.error || "Request failed.");
       const citations = data.citations.map((item) => `<li><a target="_blank" rel="noopener" href="${escapeHtml(item.url)}">${escapeHtml(item.title)}</a></li>`).join("");
@@ -40,5 +43,33 @@
     const node = document.createElement("span");
     node.textContent = String(value);
     return node.innerHTML;
+  }
+
+  async function localSearch(question) {
+    const corpusBase = new URL(renderer ? `${renderer}/` : "", siteRoot);
+    const [indexResponse, fullResponse] = await Promise.all([
+      fetch(new URL("llms.txt", corpusBase)),
+      fetch(new URL("llms-full.txt", corpusBase)),
+    ]);
+    if (!indexResponse.ok || !fullResponse.ok) throw new Error("Corpus unavailable");
+    const terms = [...new Set(question.toLowerCase().match(/[a-z0-9]+/g) || [])].filter((term) => term.length > 2);
+    const links = new Map([...((await indexResponse.text()).matchAll(/\[([^\]]+)]\((https?:\/\/[^)]+)\)/g))].map((match) => [match[1].toLowerCase(), match[2]]));
+    return (await fullResponse.text()).split(/\n---\n/).map((section) => {
+      const title = section.match(/^#\s+(.+)$/m)?.[1] || "Northstar documentation";
+      const plain = section.replace(/^---[\s\S]*?---\s*/, "").replace(/[#*`>|\[\]()_-]/g, " ").replace(/\s+/g, " ").trim();
+      const lower = `${title} ${plain}`.toLowerCase();
+      const score = terms.reduce((total, term) => total + (lower.split(term).length - 1), 0);
+      const url = [...links].find(([name]) => title.toLowerCase().includes(name) || name.includes(title.toLowerCase()))?.[1];
+      return { title, excerpt: plain.slice(0, 360), score, url };
+    }).filter((item) => item.score > 0).sort((a, b) => b.score - a.score).slice(0, 3);
+  }
+
+  function renderLocalResults(items) {
+    if (!items.length) {
+      result.innerHTML = '<p><span class="source">Local search · Unsupported</span></p><p>No matching passage was found in the published documentation.</p>';
+      return;
+    }
+    const passages = items.map((item) => `<li><strong>${escapeHtml(item.title)}</strong><br>${escapeHtml(item.excerpt)}${item.excerpt.length >= 360 ? "…" : ""}${item.url ? `<br><a target="_blank" rel="noopener" href="${escapeHtml(item.url)}">Open source</a>` : ""}</li>`).join("");
+    result.innerHTML = `<p><span class="source">Local search · Documentation</span></p><p>These are matching passages, not an AI-generated answer:</p><ul>${passages}</ul>`;
   }
 })();

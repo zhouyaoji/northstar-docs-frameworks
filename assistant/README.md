@@ -37,9 +37,10 @@ NORTHSTAR_ASSISTANT_API_URL="http://localhost:8787" ./tools/build-sites.sh
 python3 -m http.server 8000 --directory public
 ```
 
-Open `http://localhost:8000`. An empty `NORTHSTAR_ASSISTANT_API_URL` still
-renders the widget, but it displays a configuration message instead of making a
-request.
+Open `http://localhost:8000`. When `NORTHSTAR_ASSISTANT_API_URL` is empty, the
+widget automatically runs a zero-cost browser search over the selected
+renderer's `llms.txt` and `llms-full.txt`. Results are explicitly labelled as
+matching passages rather than AI-generated answers.
 
 ## Deploy
 

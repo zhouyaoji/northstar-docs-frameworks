@@ -42,10 +42,12 @@ across all six renderers and establishes the response contract for the future
 AIPP comparison.
 
 GitHub Pages serves only static files, so it cannot safely hold an OpenAI API
-key or execute the model call. The widget therefore remains visible but reports
-that the demo API is not configured until a server-side endpoint is deployed
-and `NORTHSTAR_ASSISTANT_API_URL` is set during the site build. The key belongs
-only in the server environment.
+key or execute the model call. Until a server-side endpoint is deployed, the
+widget provides a zero-cost local search of the selected renderer's published
+AI-readable files and clearly identifies its output as matching passages rather
+than an AI-generated answer. Set `NORTHSTAR_ASSISTANT_API_URL` during the site
+build to enable model-backed responses. The key belongs only in the server
+environment.
 
 See `assistant/README.md` for architecture, local commands, deployment
 variables, security controls, and the JSON response contract.
