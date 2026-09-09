@@ -1,0 +1,42 @@
+---
+import { getCollection, render } from 'astro:content';
+import { components } from '@mintlify/astro/components';
+import docsConfig from '../../docs/docs.json';
+import '../styles.css';
+
+export async function getStaticPaths() {
+  const docs = await getCollection('docs');
+  return docs.map((doc) => ({
+    params: { slug: doc.id === 'index' ? undefined : doc.id },
+    props: { doc },
+  }));
+}
+
+const { doc } = Astro.props;
+const { Content } = await render(doc);
+const base = import.meta.env.BASE_URL.replace(/\/$/, '');
+const groups = docsConfig.navigation.groups;
+---
+
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width" />
+    <meta name="generator" content={`Mintlify headless + ${Astro.generator}`} />
+    <meta name="description" content={doc.data.description || docsConfig.description} />
+    <title>{doc.data.title} | Northstar Mintlify</title>
+  </head>
+  <body>
+    <header>
+      <a class="brand" href={`${base}/`}>Northstar · Mintlify</a>
+      <nav><a href="/northstar-docs-frameworks/">Docs Lab</a><a href="https://zhouyaoji.github.io/">Portfolio</a></nav>
+    </header>
+    <div class="layout">
+      <aside aria-label="Documentation navigation">
+        {groups.map((group) => <section><h2>{group.group}</h2>{group.pages.map((page) => <a href={`${base}/${page === 'index' ? '' : `${page}/`}`}>{page === 'index' ? 'Overview' : page.split('/').at(-1).replaceAll('-', ' ')}</a>)}</section>)}
+      </aside>
+      <main><article><Content components={components} /></article></main>
+    </div>
+  </body>
+</html>

@@ -10,4 +10,7 @@ _build/
 public/
 sites/mkdocs/docs/
 sites/sphinx-myst/content/
+sites/mintlify/.astro/
+sites/mintlify/.mintlify/
+sites/mintlify/docs/**/*.mdx
 *.log

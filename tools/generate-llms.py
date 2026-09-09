@@ -19,6 +19,10 @@ DEFAULT_SITE_URL = "https://zhouyaoji.github.io/northstar-docs-frameworks"
 SITE_URL = os.environ.get("NORTHSTAR_SITE_URL", DEFAULT_SITE_URL).rstrip("/")
 
 RENDERERS = {
+    "mintlify": {
+        "name": "Mintlify headless",
+        "page_url": lambda page_id: "" if page_id == "overview" else f"{page_id}/",
+    },
     "docusaurus": {
         "name": "Docusaurus",
         "page_url": lambda page_id: "" if page_id == "overview" else f"{page_id}/",
