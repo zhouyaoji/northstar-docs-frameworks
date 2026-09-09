@@ -4,7 +4,7 @@
 
 1. Install pinned Node.js and Python dependencies with dependency caching.
 2. Validate manifest coverage and titles across the maintained source formats.
-3. Build all six deployable renderers for pull requests and pushes.
+3. Build all seven deployable renderers for pull requests and pushes.
 4. Treat invalid OpenAPI, strict-build warnings, and broken local links or
    assets as build failures.
 5. Retain pull-request output as a seven-day preview artifact.

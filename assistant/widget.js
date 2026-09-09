@@ -12,7 +12,7 @@
   const form = shadow.querySelector("form");
   const input = shadow.querySelector("input");
   const result = shadow.querySelector(".result");
-  const known = ["docusaurus", "mkdocs", "sphinx-rest", "sphinx-myst", "antora", "redocly"];
+  const known = ["docusaurus", "mkdocs", "sphinx-rest", "sphinx-myst", "antora", "redocly", "mintlify"];
   const renderer = location.pathname.split("/").find((part) => known.includes(part));
   const siteRoot = new URL("../", current.src);
 

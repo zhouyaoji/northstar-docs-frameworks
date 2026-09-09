@@ -18,6 +18,7 @@ pipeline {
       steps {
         sh 'npm ci --prefix sites/antora'
         sh 'npm ci --prefix sites/docusaurus'
+        sh 'npm ci --prefix sites/mintlify'
         sh 'npm ci --prefix sites/redocly'
         sh 'python -m pip install --requirement requirements.txt'
       }

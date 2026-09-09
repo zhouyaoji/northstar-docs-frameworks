@@ -1,0 +1,19 @@
+{
+  "$schema": "https://mintlify.com/docs.json",
+  "theme": "mint",
+  "name": "Northstar Platform",
+  "description": "Fictional platform documentation rendered with Mintlify's headless Astro integration.",
+  "colors": {
+    "primary": "#2563EB",
+    "light": "#60A5FA",
+    "dark": "#1D4ED8"
+  },
+  "navigation": {
+    "groups": [
+      { "group": "Overview", "pages": ["index"] },
+      { "group": "Concepts", "pages": ["concepts/cluster-profiles", "concepts/environments"] },
+      { "group": "Guides", "pages": ["guides/create-environment"] },
+      { "group": "Reference", "pages": ["reference/api-conventions", "reference/style-guide"] }
+    ]
+  }
+}

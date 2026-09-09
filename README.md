@@ -13,7 +13,7 @@ small, inspectable comparison rather than as a production product site.
 | MkDocs | Markdown | Deployable |
 | Sphinx | reStructuredText | Deployable |
 | Sphinx with MyST | MyST Markdown | Deployable |
-| Mintlify | MDX | Scaffolded |
+| Mintlify | MDX via headless Astro | Deployable |
 | Antora | AsciiDoc | Deployable |
 
 The human-maintained source variants live beneath `content/`. Stable page IDs,
@@ -38,7 +38,7 @@ widget identifies the active renderer and sends the question to a separate
 Node API. That API grounds the answer in the renderer's generated `llms.txt`
 and `llms-full.txt`, validates citation URLs against the index, and labels the
 answer as **Documentation** or **Unsupported**. This makes responses comparable
-across all six renderers and establishes the response contract for the future
+across all seven renderers and establishes the response contract for the future
 AIPP comparison.
 
 GitHub Pages serves only static files, so it cannot safely hold an OpenAI API
@@ -73,11 +73,11 @@ The build job runs these stages in order:
 1. **Check out the commit.** The runner receives the exact repository revision
    being tested.
 2. **Prepare and cache runtimes.** Node.js 22 and Python 3.12 are configured.
-   npm caches are keyed from the three lockfiles, and pip caching is derived
+   npm caches are keyed from the four lockfiles, and pip caching is derived
    from `requirements.txt`. A cache can make dependency installation faster,
    but a cache miss does not change the result of the build.
 3. **Install pinned dependencies.** `npm ci` installs the Antora, Docusaurus,
-   and Redocly lockfiles exactly. pip installs the versions pinned in
+   Mintlify, and Redocly lockfiles exactly. pip installs the versions pinned in
    `requirements.txt`.
 4. **Validate the content model.** `tools/validate-content.py` reads
    `content/manifest.yaml` and rejects duplicate page IDs, missing files,
@@ -86,9 +86,10 @@ The build job runs these stages in order:
    Markdown, reStructuredText, and AsciiDoc representation.
 5. **Build every renderer.** `tools/build-sites.sh` creates a fresh `public/`
    directory, adds the landing page, and builds Docusaurus, Redocly, Antora,
-   MkDocs, Sphinx reStructuredText, and Sphinx MyST. Redocly lints the OpenAPI
-   description before rendering. MkDocs uses strict mode, and both Sphinx builds
-   treat warnings as errors.
+   Mintlify headless Astro, MkDocs, Sphinx reStructuredText, and Sphinx MyST.
+   Redocly lints the OpenAPI description before rendering. Mintlify processes
+   generated MDX through its official Astro integration, MkDocs uses strict
+   mode, and both Sphinx builds treat warnings as errors.
 6. **Check the assembled site.** `tools/check-built-links.py` parses every
    generated HTML file and verifies that local links, scripts, stylesheets, and
    images resolve inside `public/`. External URLs are not requested during this
@@ -158,6 +159,7 @@ pipeline {
       steps {
         sh 'npm ci --prefix sites/antora'
         sh 'npm ci --prefix sites/docusaurus'
+        sh 'npm ci --prefix sites/mintlify'
         sh 'npm ci --prefix sites/redocly'
         sh 'python -m pip install --requirement requirements.txt'
       }
@@ -249,6 +251,7 @@ public/
 ├── antora/
 ├── docusaurus/
 ├── mkdocs/
+├── mintlify/
 ├── redocly/
 ├── sphinx-myst/
 └── sphinx-rest/
@@ -265,6 +268,7 @@ Use the same commands as CI from the repository root:
 ```bash
 npm ci --prefix sites/antora
 npm ci --prefix sites/docusaurus
+npm ci --prefix sites/mintlify
 npm ci --prefix sites/redocly
 python -m pip install --requirement requirements.txt
 python tools/validate-content.py

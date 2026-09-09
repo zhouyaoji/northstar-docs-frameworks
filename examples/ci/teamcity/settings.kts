@@ -28,6 +28,7 @@ object NorthstarDocs : BuildType({
             scriptContent = """
                 npm ci --prefix sites/antora
                 npm ci --prefix sites/docusaurus
+                npm ci --prefix sites/mintlify
                 npm ci --prefix sites/redocly
                 python -m pip install --requirement requirements.txt
             """.trimIndent()

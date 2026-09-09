@@ -5,7 +5,7 @@ const API_KEY = process.env.OPENAI_API_KEY;
 const MODEL = process.env.OPENAI_MODEL || "gpt-5-mini";
 const CORPUS_URL = (process.env.NORTHSTAR_CORPUS_URL || "https://zhouyaoji.github.io/northstar-docs-frameworks").replace(/\/$/, "");
 const ALLOWED_ORIGIN = process.env.NORTHSTAR_ALLOWED_ORIGIN || "https://zhouyaoji.github.io";
-const RENDERERS = new Set(["docusaurus", "mkdocs", "sphinx-rest", "sphinx-myst", "antora", "redocly"]);
+const RENDERERS = new Set(["docusaurus", "mkdocs", "sphinx-rest", "sphinx-myst", "antora", "redocly", "mintlify"]);
 const cache = new Map();
 const requests = new Map();
 
