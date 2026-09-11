@@ -52,6 +52,20 @@ environment.
 See `assistant/README.md` for architecture, local commands, deployment
 variables, security controls, and the JSON response contract.
 
+## Documentation quality scorecard
+
+The build publishes a versioned, evidence-backed scorecard at `/scorecard/`.
+Its current numeric results use only deterministic checks for publication,
+structure, accessibility, SEO, localization readiness, findability,
+AI-readable exports, assistant installation, and retrieval benchmarks. Planned
+AI-assisted and human-review criteria remain visible as `not_evaluated` and do
+not affect the score.
+
+The rubric, benchmark questions, scoring limitations, and future AIPP
+comparison are documented in [`evaluation/`](evaluation/README.md). Run
+`python tools/generate-scorecard.py` after building to regenerate JSON,
+Markdown, and HTML reports.
+
 ## CI/CD automation
 
 GitHub Actions is both the continuous integration (CI) and continuous delivery
@@ -99,10 +113,13 @@ The build job runs these stages in order:
    manifest and canonical Markdown to create `llms.txt` and `llms-full.txt` at
    the site root and beneath every deployed renderer path. The Redocly export
    also publishes the source OpenAPI file.
-8. **Publish an artifact.** Pull requests retain `public/` as a downloadable
+8. **Generate the documentation scorecard.** The build applies the versioned
+   rubric to every renderer, runs the fixed retrieval benchmarks, and writes
+   HTML, Markdown, and JSON evidence beneath `public/scorecard/`.
+9. **Publish an artifact.** Pull requests retain `public/` as a downloadable
    `rendered-documentation` artifact for seven days. This lets a reviewer inspect
    the exact output without deploying it publicly.
-9. **Deploy after merge.** For pushes to `main`, the build job uploads a GitHub
+10. **Deploy after merge.** For pushes to `main`, the build job uploads a GitHub
    Pages artifact. A separate deployment job runs only after the build succeeds
    and publishes that artifact to the `github-pages` environment.
 
@@ -253,6 +270,7 @@ public/
 ├── mkdocs/
 ├── mintlify/
 ├── redocly/
+├── scorecard/
 ├── sphinx-myst/
 └── sphinx-rest/
 ```

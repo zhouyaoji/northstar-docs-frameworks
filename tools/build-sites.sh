@@ -25,5 +25,7 @@ sphinx-build -W --keep-going -b html -c "$repo_root/sites/sphinx-rest" "$repo_ro
 sphinx-build -W --keep-going -b html "$repo_root/sites/sphinx-myst" "$public_dir/sphinx-myst"
 python3 "$repo_root/tools/generate-llms.py"
 python3 "$repo_root/tools/install-assistant.py"
+python3 "$repo_root/tools/generate-scorecard.py"
+python3 "$repo_root/tools/install-assistant.py"
 
 touch "$public_dir/.nojekyll"

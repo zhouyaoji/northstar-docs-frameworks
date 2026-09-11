@@ -1,0 +1,20 @@
+schemaVersion: 1
+benchmarks:
+  - id: platform-overview
+    question: What is the Northstar platform?
+    expectedTitle: Northstar Platform overview
+  - id: cluster-profile
+    question: What does a cluster profile control?
+    expectedTitle: Cluster profiles
+  - id: environments
+    question: What is a Northstar environment?
+    expectedTitle: Environments
+  - id: create-environment
+    question: How do I create an environment?
+    expectedTitle: Create an environment
+  - id: api-conventions
+    question: What API conventions does Northstar use?
+    expectedTitle: API conventions
+  - id: documentation-style
+    question: What documentation style should contributors follow?
+    expectedTitle: Documentation style guide
