@@ -48,6 +48,14 @@ jobs:
         run: ./tools/build-sites.sh
       - name: Check generated links and assets
         run: python tools/check-built-links.py
+      - name: Preserve scorecard baseline artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: documentation-scorecard
+          path: |
+            public/scorecard/scorecard.json
+            public/scorecard/scorecard.md
+          retention-days: 30
       - name: Upload pull-request preview artifact
         if: github.event_name == 'pull_request'
         uses: actions/upload-artifact@v4

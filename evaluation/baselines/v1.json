@@ -1,0 +1,14 @@
+{
+  "schemaVersion": 1,
+  "rubricVersion": "1.0.0",
+  "description": "Initial deterministic Northstar scorecard baseline",
+  "renderers": {
+    "docusaurus": 89.0,
+    "mkdocs": 77.0,
+    "sphinx-rest": 83.0,
+    "sphinx-myst": 83.0,
+    "antora": 83.0,
+    "redocly": 88.0,
+    "mintlify": 95.0
+  }
+}

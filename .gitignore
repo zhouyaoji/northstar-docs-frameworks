@@ -8,6 +8,7 @@ site/
 _build/
 .docusaurus/
 public/
+__pycache__/
 sites/mkdocs/docs/
 sites/sphinx-myst/content/
 sites/mintlify/.astro/

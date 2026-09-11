@@ -9,9 +9,14 @@ Both examples preserve the same portable contract:
 1. Install pinned dependencies.
 2. Validate the content manifest and source coverage.
 3. Build all documentation renderers.
-4. check the assembled site's local links and assets.
-5. Retain `public/` as the immutable build artifact.
-6. Deploy that artifact only from an approved default-branch build.
+4. Generate the same versioned scorecard and retrieval evidence as GitHub Actions.
+5. Check the assembled site's local links and assets.
+6. Retain `public/` as the immutable build artifact, including the scorecard.
+7. Deploy that artifact only from an approved default-branch build.
+
+`tools/build-sites.sh` invokes the scorecard generator, so Jenkins, TeamCity,
+and other CI systems receive identical evaluation behavior without adding a
+service-specific step.
 
 ## Jenkins
 

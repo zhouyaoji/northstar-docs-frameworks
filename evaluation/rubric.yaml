@@ -1,0 +1,173 @@
+schemaVersion: 1
+rubricVersion: 1.0.0
+name: Northstar documentation quality rubric
+principles:
+  - Scores measure repeatable conformance to declared criteria, not objective documentation quality.
+  - Automated, AI-assisted, and human evidence are reported separately.
+  - Criteria without evidence are not included in a numeric score.
+methods:
+  automated: Deterministic checks that can run in CI.
+  ai: Model-assisted judgments that must name the model, prompt, and evidence.
+  human: Reviews that identify the role, decision, and date without storing personal data.
+criteria:
+  - id: publication.renderer_output
+    category: Publication verification
+    method: automated
+    weight: 8
+    blocking: true
+    status: implemented
+    description: The renderer produces an HTML site.
+  - id: structured.expected_pages
+    category: Structured content and markup
+    method: automated
+    weight: 10
+    blocking: true
+    status: implemented
+    description: Every canonical page is represented in the renderer's AI-readable index.
+  - id: structured.page_titles
+    category: Structured content and markup
+    method: automated
+    weight: 6
+    blocking: false
+    status: implemented
+    description: Generated HTML pages have non-empty, unique titles.
+  - id: accessibility.document_language
+    category: Accessibility
+    method: automated
+    weight: 6
+    blocking: false
+    status: implemented
+    description: Every HTML page declares a document language.
+  - id: accessibility.heading_structure
+    category: Accessibility
+    method: automated
+    weight: 6
+    blocking: false
+    status: implemented
+    description: Content pages contain a first-level heading and do not skip heading levels.
+  - id: accessibility.image_alternatives
+    category: Accessibility
+    method: automated
+    weight: 4
+    blocking: false
+    status: implemented
+    description: Content images provide an alt attribute; decorative images may use an empty value.
+  - id: seo.page_titles
+    category: SEO
+    method: automated
+    weight: 6
+    blocking: false
+    status: implemented
+    description: Every generated HTML page has a meaningful title.
+  - id: seo.meta_descriptions
+    category: SEO
+    method: automated
+    weight: 6
+    blocking: false
+    status: implemented
+    description: Every content page has a non-empty meta description.
+  - id: taxonomy.descriptive_links
+    category: Taxonomy and findability
+    method: automated
+    weight: 5
+    blocking: false
+    status: implemented
+    description: Link labels avoid generic phrases such as click here and read more.
+  - id: localization.language_metadata
+    category: Localization readiness
+    method: automated
+    weight: 5
+    blocking: false
+    status: implemented
+    description: Published pages declare a valid language tag that localization tooling can discover.
+  - id: localization.risky_phrases
+    category: Localization readiness
+    method: automated
+    weight: 5
+    blocking: false
+    status: implemented
+    description: Content avoids selected ambiguous, visual-only, or culturally dependent phrases.
+  - id: translation.locale_coverage
+    category: Translation quality
+    method: automated
+    weight: 0
+    blocking: false
+    status: planned
+    description: Every supported locale contains the expected pages and preserves code placeholders.
+  - id: ai.llms_exports
+    category: AI readiness
+    method: automated
+    weight: 10
+    blocking: true
+    status: implemented
+    description: llms.txt and llms-full.txt are present and non-empty.
+  - id: ai.assistant_installed
+    category: AI readiness
+    method: automated
+    weight: 8
+    blocking: true
+    status: implemented
+    description: The shared documentation assistant is installed on content pages.
+  - id: ai.retrieval_benchmarks
+    category: AI readiness
+    method: automated
+    weight: 15
+    blocking: false
+    status: implemented
+    description: The zero-cost assistant retrieves the expected page for fixed benchmark questions.
+  - id: scope.requirements_approval
+    category: Scope and requirements
+    method: human
+    weight: 0
+    blocking: false
+    status: planned
+    description: Product and engineering confirm the documented scope.
+  - id: accuracy.engineering_approval
+    category: Technical accuracy
+    method: human
+    weight: 0
+    blocking: false
+    status: planned
+    description: An appropriate engineer verifies claims and procedures.
+  - id: audience.task_success
+    category: Audience and messaging
+    method: human
+    weight: 0
+    blocking: false
+    status: planned
+    description: A representative reader can complete the documented task.
+  - id: editorial.peer_review
+    category: Editorial quality
+    method: human
+    weight: 0
+    blocking: false
+    status: planned
+    description: A writer other than the author reviews the content.
+  - id: accessibility.assistive_technology_review
+    category: Accessibility
+    method: human
+    weight: 0
+    blocking: false
+    status: planned
+    description: Keyboard and screen-reader behavior is reviewed directly.
+  - id: translation.linguistic_review
+    category: Translation quality
+    method: human
+    weight: 0
+    blocking: false
+    status: planned
+    description: A qualified speaker reviews meaning, terminology, and cultural suitability.
+  - id: ai.grounded_answers
+    category: AI readiness
+    method: ai
+    weight: 0
+    blocking: false
+    status: planned
+    description: Answers are correct, grounded, cited, and appropriately abstain when evidence is missing.
+  - id: release.communications
+    category: Release communications
+    method: human
+    weight: 0
+    blocking: false
+    status: planned
+    description: Release notes and lifecycle notices are reviewed when a release requires them.
