@@ -40,6 +40,17 @@ RISKY_PHRASES = (
     "above-mentioned",
     "below-mentioned",
 )
+IMPACT_VALUE = {"low": 1, "medium": 2, "high": 3}
+EFFORT_VALUE = {"low": 1, "medium": 2, "high": 3}
+FEASIBILITY_VALUE = {
+    "native": 1.0,
+    "configurable": 0.9,
+    "plugin": 0.75,
+    "custom": 0.6,
+    "workaround": 0.35,
+    "unsupported": 0.0,
+    "unknown": 0.25,
+}
 
 
 @dataclass
@@ -127,6 +138,51 @@ def result(criterion: dict, renderer: str, passed: bool | None, evidence: str) -
         "blocking": criterion["blocking"],
         "evidence": evidence,
     }
+
+
+def rubric_metadata(rubric: dict) -> tuple[dict[str, str], dict[str, dict]]:
+    groups: dict[str, str] = {}
+    for group_id, group in rubric["scoreGroups"].items():
+        for criterion_id in group["criteria"]:
+            if criterion_id in groups:
+                raise ValueError(f"criterion appears in multiple score groups: {criterion_id}")
+            groups[criterion_id] = group_id
+    criteria_ids = {criterion["id"] for criterion in rubric["criteria"]}
+    if set(groups) != criteria_ids:
+        raise ValueError(
+            f"score-group mapping mismatch; missing={sorted(criteria_ids - set(groups))}, "
+            f"unknown={sorted(set(groups) - criteria_ids)}"
+        )
+    return groups, rubric.get("recommendations", {})
+
+
+def decorate_result(item: dict, groups: dict[str, str], recommendations: dict[str, dict]) -> dict:
+    item["scoreGroup"] = groups[item["criterion"]]
+    recommendation = recommendations.get(item["criterion"])
+    item["providedBy"] = recommendation.get("providedBy") if recommendation else None
+    item["recommendation"] = recommendation if item["status"] == "fail" else None
+    return item
+
+
+def evaluate_shared_content(criteria: list[dict]) -> list[dict]:
+    source_files = sorted((ROOT / "content" / "markdown").rglob("*.md"))
+    evaluated_files = [path for path in source_files if path.name != "style-guide.md"]
+    normalized = " ".join(
+        path.read_text(encoding="utf-8", errors="replace").lower()
+        for path in evaluated_files
+    )
+    risky = [phrase for phrase in RISKY_PHRASES if phrase in normalized]
+    checks: dict[str, tuple[bool | None, str]] = {
+        "localization.risky_phrases": (
+            not risky,
+            f"checked {len(evaluated_files)} canonical content files; flagged phrases: {', '.join(risky) or 'none'}; excluded the style guide that defines the rule",
+        ),
+        "translation.locale_coverage": (None, "no translated locale has been declared"),
+    }
+    return [
+        result(criterion, "shared-content", *checks.get(criterion["id"], (None, "review evidence has not been supplied")))
+        for criterion in criteria
+    ]
 
 
 def heading_structure_valid(page: Page) -> bool:
@@ -255,14 +311,66 @@ def scores(results: list[dict]) -> dict:
         return round(100 * numerator / denominator, 1)
 
     evaluated = [item for item in results if item["status"] in {"pass", "fail"} and item["weight"] > 0]
+    group_results: dict[str, list[dict]] = defaultdict(list)
+    group_totals: Counter[str] = Counter()
+    group_evaluated: Counter[str] = Counter()
+    for item in results:
+        group_totals[item["scoreGroup"]] += 1
+        if item["status"] in {"pass", "fail"}:
+            group_evaluated[item["scoreGroup"]] += 1
+    for item in evaluated:
+        group_results[item["scoreGroup"]].append(item)
     return {
         "overall": weighted(evaluated),
+        "groups": {group: weighted(items) for group, items in sorted(group_results.items())},
+        "groupCoverage": {
+            group: {"evaluated": group_evaluated[group], "total": total}
+            for group, total in sorted(group_totals.items())
+        },
         "categories": {category: weighted(items) for category, items in sorted(grouped.items())},
         "blockingFailures": [item["criterion"] for item in results if item["blocking"] and item["status"] == "fail"],
     }
 
 
+def prioritized_improvements(renderer_reports: list[dict]) -> list[dict]:
+    improvements = []
+    for renderer in renderer_reports:
+        for item in renderer["results"]:
+            recommendation = item.get("recommendation")
+            if not recommendation:
+                continue
+            impact = recommendation["impact"]
+            effort = recommendation["effort"]
+            feasibility = recommendation["feasibility"]
+            priority_score = round(
+                10 * IMPACT_VALUE[impact] * FEASIBILITY_VALUE[feasibility] / EFFORT_VALUE[effort],
+                1,
+            )
+            improvements.append(
+                {
+                    "renderer": renderer["name"],
+                    "criterion": item["criterion"],
+                    "scoreGroup": item["scoreGroup"],
+                    "category": item["category"],
+                    "summary": recommendation["summary"],
+                    "impact": impact,
+                    "effort": effort,
+                    "feasibility": feasibility,
+                    "providedBy": recommendation["providedBy"],
+                    "fixOwner": recommendation["fixOwner"],
+                    "scoreOpportunity": item["weight"],
+                    "priorityScore": priority_score,
+                    "detailAnchor": f"{renderer['name']}-{item['scoreGroup']}-{item['criterion']}",
+                }
+            )
+    improvements.sort(key=lambda item: (-item["priorityScore"], -item["scoreOpportunity"], item["renderer"], item["criterion"]))
+    for index, improvement in enumerate(improvements, start=1):
+        improvement["priority"] = index
+    return improvements
+
+
 def render_markdown(report: dict) -> str:
+    content_score = report["sharedContent"]["scores"]["groups"].get("content")
     lines = [
         "# Northstar documentation scorecard",
         "",
@@ -270,40 +378,71 @@ def render_markdown(report: dict) -> str:
         f"Commit: `{report['commit']}`  ",
         f"Generated: `{report['generatedAt']}`",
         "",
-        "> Scores represent repeatable conformance to declared automated criteria. Planned AI and human criteria are not scored.",
+        "> Content is scored once. Renderer implementation, AI readiness, and publication operations are scored per renderer. Planned AI and human criteria are not scored.",
         "",
-        "| Renderer | Automated score | Change from baseline | Blocking failures |",
-        "| --- | ---: | ---: | ---: |",
+        f"Shared content quality: **{content_score:.1f}** ({report['sharedContent']['scores']['groupCoverage']['content']['evaluated']}/{report['sharedContent']['scores']['groupCoverage']['content']['total']} criteria evaluated)" if content_score is not None else "Shared content quality: **Not evaluated**",
+        "",
+        "| Renderer | Renderer implementation | AI readiness | Publication operations | Blocking failures |",
+        "| --- | ---: | ---: | ---: | ---: |",
     ]
     for renderer in report["renderers"]:
-        delta = renderer["scores"].get("baselineDelta")
-        delta_text = "N/A" if delta is None else f"{delta:+.1f}"
-        lines.append(f"| {renderer['name']} | {renderer['scores']['overall']:.1f} | {delta_text} | {len(renderer['scores']['blockingFailures'])} |")
+        groups = renderer["scores"]["groups"]
+        coverage = renderer["scores"]["groupCoverage"]
+        lines.append(
+            f"| {renderer['name']} | {groups.get('renderer', 0):.1f} ({coverage['renderer']['evaluated']}/{coverage['renderer']['total']}) | "
+            f"{groups.get('ai', 0):.1f} ({coverage['ai']['evaluated']}/{coverage['ai']['total']}) | "
+            f"{groups.get('publication', 0):.1f} ({coverage['publication']['evaluated']}/{coverage['publication']['total']}) | "
+            f"{len(renderer['scores']['blockingFailures'])} |"
+        )
+    lines.extend(["", "## Prioritized improvements", "", "| Priority | Renderer | Improvement | Group | Impact | Effort | Feasibility | Opportunity |", "| ---: | --- | --- | --- | --- | --- | --- | ---: |"])
+    for improvement in report["improvements"]:
+        lines.append(
+            f"| {improvement['priority']} | {improvement['renderer']} | {improvement['summary']} | "
+            f"{improvement['scoreGroup']} | {improvement['impact']} | {improvement['effort']} | "
+            f"{improvement['feasibility']} | +{improvement['scoreOpportunity']} |"
+        )
     lines.extend(["", "## Results by renderer", ""])
     for renderer in report["renderers"]:
-        lines.extend([f"### {renderer['name']} - {renderer['scores']['overall']:.1f}", "", "| Status | Category | Criterion | Evidence |", "| --- | --- | --- | --- |"])
+        lines.extend([f"### {renderer['name']}", "", "| Status | Group | Category | Criterion | Evidence and recommendation |", "| --- | --- | --- | --- | --- |"])
         for item in renderer["results"]:
-            lines.append(f"| {item['status']} | {item['category']} | `{item['criterion']}` | {item['evidence'].replace('|', '\\|')} |")
+            detail = item["evidence"]
+            if item.get("recommendation"):
+                recommendation = item["recommendation"]
+                detail += f" Recommended: {recommendation['summary']} Owner: {recommendation['fixOwner']}."
+            lines.append(f"| {item['status']} | {item['scoreGroup']} | {item['category']} | `{item['criterion']}` | {detail.replace('|', '\\|')} |")
         lines.append("")
     return "\n".join(lines)
 
 
 def render_html(report: dict) -> str:
-    cards = "".join(
-        f'<article class="card"><h2>{html.escape(renderer["name"])}</h2><p class="score">{renderer["scores"]["overall"]:.1f}</p><p>Automated score · {renderer["scores"].get("baselineDelta", 0):+.1f} from baseline</p><a href="#{html.escape(renderer["name"])}">View evidence</a></article>'
+    content_score = report["sharedContent"]["scores"]["groups"].get("content")
+    content_coverage = report["sharedContent"]["scores"]["groupCoverage"]["content"]
+    matrix_rows = "".join(
+        f'<tr><th scope="row"><a href="#{html.escape(renderer["name"])}">{html.escape(renderer["name"])}</a></th>'
+        f'<td>{renderer["scores"]["groups"].get("renderer", 0):.1f}<small>{renderer["scores"]["groupCoverage"]["renderer"]["evaluated"]}/{renderer["scores"]["groupCoverage"]["renderer"]["total"]} criteria</small></td>'
+        f'<td>{renderer["scores"]["groups"].get("ai", 0):.1f}<small>{renderer["scores"]["groupCoverage"]["ai"]["evaluated"]}/{renderer["scores"]["groupCoverage"]["ai"]["total"]} criteria</small></td>'
+        f'<td>{renderer["scores"]["groups"].get("publication", 0):.1f}<small>{renderer["scores"]["groupCoverage"]["publication"]["evaluated"]}/{renderer["scores"]["groupCoverage"]["publication"]["total"]} criteria</small></td></tr>'
         for renderer in report["renderers"]
     )
+    improvement_rows = "".join(
+        f'<tr><td>{item["priority"]}</td><td>{html.escape(item["renderer"])}</td>'
+        f'<td><a href="#{html.escape(item["detailAnchor"])}">{html.escape(item["summary"])}</a></td>'
+        f'<td>{html.escape(item["scoreGroup"])}</td><td>{html.escape(item["impact"])}</td>'
+        f'<td>{html.escape(item["effort"])}</td><td>{html.escape(item["feasibility"])}</td>'
+        f'<td>{html.escape(item["fixOwner"])}</td><td>+{item["scoreOpportunity"]}</td></tr>'
+        for item in report["improvements"]
+    ) or '<tr><td colspan="8">No implemented criteria currently require improvement.</td></tr>'
     sections = []
     for renderer in report["renderers"]:
         rows = "".join(
-            f'<tr><td><span class="{item["status"]}">{html.escape(item["status"].replace("_", " "))}</span></td><td>{html.escape(item["category"])}</td><td><code>{html.escape(item["criterion"])}</code></td><td>{html.escape(item["evidence"])}</td></tr>'
+            f'<tr id="{html.escape(renderer["name"] + "-" + item["scoreGroup"] + "-" + item["criterion"])}"><td><span class="{item["status"]}">{html.escape(item["status"].replace("_", " "))}</span></td><td>{html.escape(item["scoreGroup"])}</td><td>{html.escape(item["category"])}</td><td><code>{html.escape(item["criterion"])}</code></td><td>{html.escape(item["evidence"])}{("<br><strong>Recommended:</strong> " + html.escape(item["recommendation"]["summary"]) + "<br><small>Owner: " + html.escape(item["recommendation"]["fixOwner"]) + " · Provided by: " + html.escape(item["recommendation"]["providedBy"]) + "</small>") if item.get("recommendation") else ""}</td></tr>'
             for item in renderer["results"]
         )
-        sections.append(f'<section id="{html.escape(renderer["name"])}"><h2>{html.escape(renderer["name"])}: {renderer["scores"]["overall"]:.1f}</h2><div class="table"><table><thead><tr><th>Status</th><th>Category</th><th>Criterion</th><th>Evidence</th></tr></thead><tbody>{rows}</tbody></table></div></section>')
+        sections.append(f'<section id="{html.escape(renderer["name"])}"><h2>{html.escape(renderer["name"])}</h2><div class="table"><table><thead><tr><th>Status</th><th>Group</th><th>Category</th><th>Criterion</th><th>Evidence</th></tr></thead><tbody>{rows}</tbody></table></div></section>')
     return f'''<!doctype html>
 <html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><meta name="description" content="Repeatable documentation quality evidence for the Northstar renderer comparison."><title>Northstar documentation scorecard</title><style>
-:root{{font-family:system-ui,sans-serif;color-scheme:light dark}}body{{margin:0;background:#071525;color:#ecf5ff}}nav,main{{max-width:1100px;margin:auto;padding:1.2rem}}a{{color:#78d8ff}}h1{{font-size:clamp(2rem,6vw,4rem);margin:.4rem 0}}.lead{{max-width:800px;color:#b9cee3;font-size:1.1rem}}.grid{{display:grid;grid-template-columns:repeat(auto-fit,minmax(190px,1fr));gap:1rem;margin:2rem 0}}.card{{background:#0c2034;border:1px solid #31506c;border-radius:14px;padding:1rem}}.card h2{{margin:0;font-size:1rem}}.score{{font-size:2.5rem;font-weight:750;margin:.6rem 0 0}}section{{margin:3rem 0}}.table{{overflow:auto}}table{{width:100%;border-collapse:collapse;background:#0c2034}}th,td{{text-align:left;vertical-align:top;padding:.7rem;border-bottom:1px solid #31506c}}.pass{{color:#77e69b}}.fail{{color:#ff9898}}.not_evaluated{{color:#b9cee3}}code{{white-space:nowrap}}
-</style></head><body><nav><a href="../">← Docs Lab</a></nav><main><p>DOCUMENTATION QUALITY</p><h1>Northstar scorecard</h1><p class="lead">Consistent evidence of progress and regression under rubric version {html.escape(report['rubricVersion'])}. Automated, AI-assisted, and human evaluation remain distinct.</p><div class="grid">{cards}</div>{''.join(sections)}<p>Commit {html.escape(report['commit'])} · Generated {html.escape(report['generatedAt'])}. <a href="scorecard.json">JSON</a> · <a href="scorecard.md">Markdown</a></p></main></body></html>'''
+:root{{font-family:system-ui,sans-serif;color-scheme:light dark}}body{{margin:0;background:#071525;color:#ecf5ff}}nav,main{{max-width:1180px;margin:auto;padding:1.2rem}}a{{color:#78d8ff}}h1{{font-size:clamp(2rem,6vw,4rem);margin:.4rem 0}}.lead{{max-width:850px;color:#b9cee3;font-size:1.1rem}}.shared{{background:#0c2034;border:1px solid #31506c;border-radius:14px;padding:1rem;margin:2rem 0}}.shared strong{{font-size:2rem;color:#77e69b}}section{{margin:3rem 0;scroll-margin-top:1rem}}.table{{overflow:auto}}table{{width:100%;border-collapse:collapse;background:#0c2034}}th,td{{text-align:left;vertical-align:top;padding:.7rem;border-bottom:1px solid #31506c}}thead th{{color:#b9cee3}}td small{{display:block;color:#b9cee3;margin-top:.2rem}}.pass{{color:#77e69b}}.fail{{color:#ff9898}}.not_evaluated{{color:#b9cee3}}code{{white-space:nowrap}}tr:target{{outline:2px solid #78d8ff;outline-offset:-2px}}
+</style></head><body><nav><a href="../">← Docs Lab</a></nav><main><p>DOCUMENTATION QUALITY</p><h1>Northstar scorecard</h1><p class="lead">Four isolated views under rubric {html.escape(report['rubricVersion'])}: shared content quality, renderer implementation, AI readiness, and publication operations. Scores reflect implemented automated evidence only.</p><div class="shared"><h2>Shared content quality</h2><strong>{content_score:.1f}</strong><p>{content_coverage['evaluated']} of {content_coverage['total']} criteria evaluated once; this score does not advantage any renderer.</p></div><section><h2>Renderer comparison</h2><div class="table"><table><thead><tr><th>Renderer</th><th>Renderer implementation</th><th>AI readiness</th><th>Publication operations</th></tr></thead><tbody>{matrix_rows}</tbody></table></div></section><section><h2>Prioritized improvements</h2><p>Default priority combines impact, effort, and feasibility. Score opportunity is available rubric weight, not a promised gain.</p><div class="table"><table><thead><tr><th>Priority</th><th>Renderer</th><th>Improvement</th><th>Group</th><th>Impact</th><th>Effort</th><th>Feasibility</th><th>Fix owner</th><th>Opportunity</th></tr></thead><tbody>{improvement_rows}</tbody></table></div></section>{''.join(sections)}<p>Commit {html.escape(report['commit'])} · Generated {html.escape(report['generatedAt'])}. Rubric 1.0 baseline comparison is disabled because the scoring groups changed. <a href="scorecard.json">JSON</a> · <a href="scorecard.md">Markdown</a></p></main></body></html>'''
 
 
 def main() -> int:
@@ -314,19 +453,32 @@ def main() -> int:
     benchmark_data = yaml.safe_load((EVALUATION / "benchmarks" / "retrieval.yaml").read_text(encoding="utf-8"))
     manifest = yaml.safe_load((ROOT / "content" / "manifest.yaml").read_text(encoding="utf-8"))
     criteria = rubric["criteria"]
+    groups, recommendations = rubric_metadata(rubric)
     expected_titles = [page["title"] for page in manifest["pages"]]
     benchmarks = benchmark_data["benchmarks"]
     baseline = json.loads(BASELINE.read_text(encoding="utf-8")) if BASELINE.is_file() else {"renderers": {}}
+    compatible_baseline = baseline.get("rubricVersion") == str(rubric["rubricVersion"])
     renderer_reports = []
     for renderer in RENDERERS:
-        renderer_results = evaluate_renderer(renderer, criteria, expected_titles, benchmarks)
+        renderer_results = [
+            decorate_result(item, groups, recommendations)
+            for item in evaluate_renderer(renderer, criteria, expected_titles, benchmarks)
+            if groups[item["criterion"]] != "content"
+        ]
         renderer_scores = scores(renderer_results)
-        baseline_score = baseline.get("renderers", {}).get(renderer)
+        baseline_score = baseline.get("renderers", {}).get(renderer) if compatible_baseline else None
         renderer_scores["baseline"] = baseline_score
         renderer_scores["baselineDelta"] = (
             round(renderer_scores["overall"] - baseline_score, 1) if baseline_score is not None else None
         )
         renderer_reports.append({"name": renderer, "scores": renderer_scores, "results": renderer_results})
+    content_criteria = [criterion for criterion in criteria if groups[criterion["id"]] == "content"]
+    content_results = [
+        decorate_result(item, groups, recommendations)
+        for item in evaluate_shared_content(content_criteria)
+    ]
+    content_report = {"scores": scores(content_results), "results": content_results}
+    improvements = prioritized_improvements(renderer_reports)
     commit = os.environ.get("GITHUB_SHA")
     if not commit:
         commit = subprocess.check_output(["git", "rev-parse", "HEAD"], cwd=ROOT, text=True).strip()
@@ -335,9 +487,13 @@ def main() -> int:
         "rubricVersion": str(rubric["rubricVersion"]),
         "generatedAt": datetime.now(timezone.utc).isoformat(),
         "commit": commit,
-        "baseline": str(BASELINE.relative_to(ROOT)) if BASELINE.is_file() else None,
-        "scoringNote": "Only implemented automated criteria with positive weights contribute to scores.",
+        "baseline": str(BASELINE.relative_to(ROOT)) if compatible_baseline else None,
+        "baselineCompatibility": "compatible" if compatible_baseline else "incompatible-rubric-version",
+        "scoringNote": "Content is scored once. Renderer, AI readiness, and publication operations are scored per renderer. Only implemented automated criteria with positive weights contribute.",
+        "scoreGroups": rubric["scoreGroups"],
+        "sharedContent": content_report,
         "renderers": renderer_reports,
+        "improvements": improvements,
     }
     OUTPUT.mkdir(parents=True, exist_ok=True)
     (OUTPUT / "scorecard.json").write_text(json.dumps(report, indent=2) + "\n", encoding="utf-8")
