@@ -23,9 +23,11 @@ The command writes `public/scorecard/index.html`, `scorecard.json`, and `scoreca
 
 ## Interpreting the score
 
-The score is the weighted percentage of implemented automated criteria that pass. Compare category results and individual evidence before using the overall number. Changes to weights or criteria require a `rubricVersion` change so historical results remain interpretable.
+Rubric 1.1 separates one shared **Content quality** score from per-renderer **Renderer implementation**, **AI readiness**, and **Publication operations** scores. The report does not combine these into a universal framework ranking. Compare group results and individual evidence before making a decision.
 
-`evaluation/baselines/v1.json` records the initial renderer scores. Reports show the change from that baseline. Promote a later result deliberately by adding a new versioned baseline and documenting the associated rubric version; do not silently overwrite history.
+Failed implemented criteria produce recommendations with impact, effort, feasibility, capability provider, fix owner, and available score opportunity. The priority table is a default triage view; teams should still apply their own requirements and constraints.
+
+`evaluation/baselines/v1.json` preserves the Rubric 1.0 renderer scores. Rubric 1.1 does not compare its newly separated groups with that incompatible baseline. Promote a later 1.1 result deliberately by adding a new versioned baseline and documenting the associated rubric version; do not silently overwrite history.
 
 ## Future AIPP comparison
 

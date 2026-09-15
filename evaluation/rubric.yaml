@@ -1,5 +1,5 @@
 schemaVersion: 1
-rubricVersion: 1.0.0
+rubricVersion: 1.1.0
 name: Northstar documentation quality rubric
 principles:
   - Scores measure repeatable conformance to declared criteria, not objective documentation quality.
@@ -9,6 +9,145 @@ methods:
   automated: Deterministic checks that can run in CI.
   ai: Model-assisted judgments that must name the model, prompt, and evidence.
   human: Reviews that identify the role, decision, and date without storing personal data.
+scoreGroups:
+  content:
+    label: Content quality
+    scope: shared
+    criteria:
+      - localization.risky_phrases
+      - translation.locale_coverage
+      - scope.requirements_approval
+      - accuracy.engineering_approval
+      - audience.task_success
+      - editorial.peer_review
+      - translation.linguistic_review
+  renderer:
+    label: Renderer implementation
+    scope: per-renderer
+    criteria:
+      - structured.expected_pages
+      - structured.page_titles
+      - accessibility.document_language
+      - accessibility.heading_structure
+      - accessibility.image_alternatives
+      - accessibility.assistive_technology_review
+      - seo.page_titles
+      - seo.meta_descriptions
+      - taxonomy.descriptive_links
+      - localization.language_metadata
+  ai:
+    label: AI readiness
+    scope: per-renderer
+    criteria:
+      - ai.llms_exports
+      - ai.assistant_installed
+      - ai.retrieval_benchmarks
+      - ai.grounded_answers
+  publication:
+    label: Publication operations
+    scope: per-renderer
+    criteria:
+      - publication.renderer_output
+      - release.communications
+recommendations:
+  structured.expected_pages:
+    summary: Include every expected page in the renderer navigation and AI-readable index.
+    impact: high
+    effort: medium
+    feasibility: configurable
+    providedBy: northstar-adapter
+    fixOwner: documentation-platform
+  structured.page_titles:
+    summary: Generate a unique, meaningful HTML title for each page.
+    impact: medium
+    effort: low
+    feasibility: configurable
+    providedBy: generator
+    fixOwner: renderer-config
+  accessibility.document_language:
+    summary: Configure the generated HTML document language.
+    impact: high
+    effort: low
+    feasibility: configurable
+    providedBy: generator
+    fixOwner: renderer-config
+  accessibility.heading_structure:
+    summary: Correct the theme or template so content headings do not skip levels.
+    impact: high
+    effort: medium
+    feasibility: configurable
+    providedBy: generator
+    fixOwner: renderer-config
+  accessibility.image_alternatives:
+    summary: Add alt attributes and review informative image descriptions.
+    impact: high
+    effort: medium
+    feasibility: configurable
+    providedBy: shared-content
+    fixOwner: content-author
+  seo.page_titles:
+    summary: Supply meaningful page titles through source metadata or renderer configuration.
+    impact: high
+    effort: low
+    feasibility: configurable
+    providedBy: generator
+    fixOwner: renderer-config
+  seo.meta_descriptions:
+    summary: Generate a unique meta description for every content page.
+    impact: high
+    effort: low
+    feasibility: configurable
+    providedBy: northstar-adapter
+    fixOwner: renderer-config
+  taxonomy.descriptive_links:
+    summary: Replace generic link labels with text that describes the destination.
+    impact: medium
+    effort: low
+    feasibility: native
+    providedBy: shared-content
+    fixOwner: content-author
+  localization.language_metadata:
+    summary: Emit a valid BCP 47 language tag on every published page.
+    impact: high
+    effort: low
+    feasibility: configurable
+    providedBy: generator
+    fixOwner: renderer-config
+  localization.risky_phrases:
+    summary: Rewrite ambiguous or visual-only phrases in canonical content.
+    impact: medium
+    effort: low
+    feasibility: native
+    providedBy: shared-content
+    fixOwner: content-author
+  ai.llms_exports:
+    summary: Generate complete llms.txt and llms-full.txt exports during the build.
+    impact: high
+    effort: medium
+    feasibility: custom
+    providedBy: publishing-pipeline
+    fixOwner: documentation-platform
+  ai.assistant_installed:
+    summary: Inject and configure the shared assistant on every non-redirect content page.
+    impact: high
+    effort: medium
+    feasibility: custom
+    providedBy: northstar-adapter
+    fixOwner: documentation-platform
+  ai.retrieval_benchmarks:
+    summary: Improve content structure, indexing, or ranking for failed benchmark questions.
+    impact: high
+    effort: medium
+    feasibility: custom
+    providedBy: northstar-adapter
+    fixOwner: ai-documentation
+  publication.renderer_output:
+    summary: Repair the renderer build or adapter so it produces a complete HTML site.
+    impact: high
+    effort: high
+    feasibility: configurable
+    providedBy: publishing-pipeline
+    fixOwner: documentation-platform
 criteria:
   - id: publication.renderer_output
     category: Publication verification
