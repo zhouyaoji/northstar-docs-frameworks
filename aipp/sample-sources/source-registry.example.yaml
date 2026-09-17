@@ -1,0 +1,51 @@
+schemaVersion: 1
+sources:
+  - id: example-confluence-prd
+    name: Environment management PRD
+    type: confluence
+    authority: product-requirements
+    owner: product-management
+    topics: [environments, requirements]
+    lifecycle: {state: active, reviewCadence: quarterly}
+    demonstrationOnly: true
+    locator:
+      kind: url
+      value: https://example.atlassian.net/wiki/spaces/PLAT/pages/123456
+    retrieval:
+      adapter: confluence
+      stableId: "123456"
+      credentialEnv: AIPP_CONFLUENCE_TOKEN
+  - id: example-jira-ticket
+    name: Environment provisioning behavior
+    type: jira
+    authority: implementation-work-item
+    owner: platform-engineering
+    topics: [environments, provisioning]
+    lifecycle: {state: active, reviewCadence: on-change}
+    demonstrationOnly: true
+    locator:
+      kind: url
+      value: https://example.atlassian.net/browse/PLAT-101
+    retrieval:
+      adapter: jira
+      stableId: PLAT-101
+      credentialEnv: AIPP_JIRA_TOKEN
+  - id: example-word-erd
+    name: Environment data model
+    type: sharepoint-docx
+    authority: engineering-design
+    owner: platform-architecture
+    topics: [environments, data-model]
+    lifecycle: {state: active, reviewCadence: quarterly}
+    demonstrationOnly: true
+    locator:
+      kind: url
+      value: https://example.sharepoint.com/sites/platform/Shared%20Documents/environment-erd.docx
+    retrieval:
+      adapter: sharepoint
+      stableId: environment-erd
+      credentialEnv: AIPP_SHAREPOINT_TOKEN
+
+# Local files use the same authority, owner, topic, and lifecycle metadata; only
+# locator.kind and retrieval.adapter change. A future collector resolves remote
+# browser URLs to source APIs and records revision, retrieval time, and SHA-256.

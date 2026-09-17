@@ -27,7 +27,7 @@ documented page exists in Markdown, reStructuredText, and AsciiDoc.
 content/       Shared content, organized by markup format
 sites/         Configuration and theme adapters for each generator
 tools/         Build, content-validation, and generated-link tooling
-aipp/          Reserved for a future AI Publication Protocol source
+aipp/          Writer-controlled sources, entries, and sample AIPP evidence
 assistant/     Shared browser widget and secure model-backed API
 ```
 
@@ -66,6 +66,24 @@ comparison are documented in [`evaluation/`](evaluation/README.md). Run
 `python tools/generate-scorecard.py` after building to regenerate JSON,
 Markdown, and HTML reports.
 
+## AIPP foundation
+
+The AIPP demonstration compiles approved human documentation, registered source
+metadata, and reviewed AI-only sidecar statements into a public product
+knowledge object. Writers retain control of the human draft and the sidecars;
+the compiler performs no model calls and invents no facts.
+
+`aipp/sources.yaml` uses the same authority, owner, topic, and lifecycle metadata
+for local files and remote systems. A locator selects either a repository path
+or URL, while retrieval metadata identifies the future filesystem, Confluence,
+Jira, SharePoint, or other adapter. Sample remote entries contain credential
+environment-variable names, never credential values.
+
+Pull requests validate and preview AIPP output. A merge to `main` reruns the
+same compiler and refreshes `/aipp/discovery.json`, `/aipp/feed.json`, the
+compiled Northstar object, and its source report as part of the Pages artifact.
+See [`aipp/README.md`](aipp/README.md) for the authoring model.
+
 ## CI/CD automation
 
 GitHub Actions is both the continuous integration (CI) and continuous delivery
@@ -98,28 +116,33 @@ The build job runs these stages in order:
    unexpected source formats, paths outside `content/`, or titles that differ
    between the manifest and a source document. Every listed page must have a
    Markdown, reStructuredText, and AsciiDoc representation.
-5. **Build every renderer.** `tools/build-sites.sh` creates a fresh `public/`
+5. **Validate AIPP inputs.** `tools/validate-aipp.py` checks the shared source
+   registry, writer-controlled entries, review state, citations, and IDs.
+6. **Build every renderer.** `tools/build-sites.sh` creates a fresh `public/`
    directory, adds the landing page, and builds Docusaurus, Redocly, Antora,
    Mintlify headless Astro, MkDocs, Sphinx reStructuredText, and Sphinx MyST.
    Redocly lints the OpenAPI description before rendering. Mintlify processes
    generated MDX through its official Astro integration, MkDocs uses strict
    mode, and both Sphinx builds treat warnings as errors.
-6. **Check the assembled site.** `tools/check-built-links.py` parses every
+7. **Check the assembled site.** `tools/check-built-links.py` parses every
    generated HTML file and verifies that local links, scripts, stylesheets, and
    images resolve inside `public/`. External URLs are not requested during this
    check, so the result is deterministic and does not depend on another site
    being available.
-7. **Generate AI-readable exports.** `tools/generate-llms.py` uses the content
+8. **Generate AI-readable exports.** `tools/generate-llms.py` uses the content
    manifest and canonical Markdown to create `llms.txt` and `llms-full.txt` at
    the site root and beneath every deployed renderer path. The Redocly export
    also publishes the source OpenAPI file.
-8. **Generate the documentation scorecard.** The build applies the versioned
+9. **Compile AIPP.** The build combines approved documentation, source
+   provenance, and reviewed AI-only statements into public discovery, feed,
+   object, and source-report JSON files.
+10. **Generate the documentation scorecard.** The build applies the versioned
    rubric to every renderer, runs the fixed retrieval benchmarks, and writes
    HTML, Markdown, and JSON evidence beneath `public/scorecard/`.
-9. **Publish an artifact.** Pull requests retain `public/` as a downloadable
+11. **Publish an artifact.** Pull requests retain `public/` as a downloadable
    `rendered-documentation` artifact for seven days. This lets a reviewer inspect
    the exact output without deploying it publicly.
-10. **Deploy after merge.** For pushes to `main`, the build job uploads a GitHub
+12. **Deploy after merge.** For pushes to `main`, the build job uploads a GitHub
    Pages artifact. A separate deployment job runs only after the build succeeds
    and publishes that artifact to the `github-pages` environment.
 
@@ -266,6 +289,7 @@ public/
 ├── llms.txt
 ├── llms-full.txt
 ├── antora/
+├── aipp/
 ├── docusaurus/
 ├── mkdocs/
 ├── mintlify/
@@ -349,9 +373,9 @@ experimental discovery aid; they supplement normal HTML, navigation, sitemaps,
 and future retrieval evaluation rather than guaranteeing that an AI system will
 index or use the content.
 
-The AIPP source and assistant are intentionally deferred. Their reserved
-directories document the intended boundaries so they can be added without a
-later repository reorganization.
+The first AIPP foundation is now active. Its generated discovery, feed, product
+object, and source report live beneath `/aipp/`; the interactive assistant and
+remote source adapters remain future work.
 
 ## License
 

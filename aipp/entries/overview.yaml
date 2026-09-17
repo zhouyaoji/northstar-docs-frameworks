@@ -1,0 +1,5 @@
+schemaVersion: 1
+documentId: overview
+sourceIds: [northstar-human-docs, northstar-content-manifest]
+review: {state: approved-for-demo, roles: [writer]}
+aiOnlyStatements: []

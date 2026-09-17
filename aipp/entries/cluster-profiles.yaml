@@ -1,0 +1,10 @@
+schemaVersion: 1
+documentId: concepts/cluster-profiles
+sourceIds: [northstar-human-docs, northstar-engineering-notes]
+review: {state: approved-for-demo, roles: [writer, engineer]}
+aiOnlyStatements:
+  - id: profile-version-upgrade
+    kind: environment
+    text: Existing environments remain pinned to the cluster-profile version used during provisioning; publishing a new profile version does not update them automatically.
+    sourceIds: [northstar-engineering-notes]
+    appliesWhen: {event: profile-version-published}

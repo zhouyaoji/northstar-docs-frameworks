@@ -162,6 +162,7 @@ def write_root_files() -> None:
             "## Optional",
             "",
             f"- [Complete canonical context]({SITE_URL}/llms-full.txt): All Northstar pages in one Markdown file.",
+            f"- [AIPP discovery]({SITE_URL}/aipp/discovery.json): Approved product knowledge, AI-only context, and source provenance.",
             "",
         ]
     )
