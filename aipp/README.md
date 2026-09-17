@@ -8,6 +8,8 @@ does not silently rewrite the documentation.
 ## Authoring model
 
 - `sources.yaml` registers authoritative inputs.
+- `source-types.yaml` documents the source categories, their usual authority,
+  likely owners, and common file or service formats.
 - `entries/*.yaml` associates a human document with sources and approved
   AI-only statements.
 - `sample-sources/` contains explicitly fictional internal material that makes
@@ -29,9 +31,19 @@ demonstrations use `locator.kind: path`; production sources can use
 stable source identifier, and an optional credential environment-variable name
 tell a future collector how to retrieve it. Credentials never belong here.
 
-See `sample-sources/source-registry.example.yaml` for Confluence, Jira, and Word
-document examples. A collector should preserve the retrieved revision,
-timestamp, and content hash as review evidence.
+## Source types
+
+The catalog explicitly covers PRDs, ERDs, wiki instructions, Word documents,
+presentations, Jira tickets, source code and configuration, API contracts,
+approved documentation, manifests, and engineering notes. `sourceType`
+describes what the source *is*; `format` describes its representation; and
+`locator` plus `retrieval` describe where and how it is collected. For example,
+an ERD remains an `erd` whether it is a local DOCX file or a SharePoint URL.
+
+See `sample-sources/source-registry.example.yaml` for fictional Confluence,
+Jira, SharePoint, PowerPoint, Word, and source-repository entries. A collector
+should preserve the retrieved revision, timestamp, and content hash as review
+evidence.
 
 ## Commands
 

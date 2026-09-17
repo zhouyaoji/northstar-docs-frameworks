@@ -2,7 +2,8 @@ schemaVersion: 1
 sources:
   - id: example-confluence-prd
     name: Environment management PRD
-    type: confluence
+    sourceType: prd
+    format: confluence-page
     authority: product-requirements
     owner: product-management
     topics: [environments, requirements]
@@ -17,7 +18,8 @@ sources:
       credentialEnv: AIPP_CONFLUENCE_TOKEN
   - id: example-jira-ticket
     name: Environment provisioning behavior
-    type: jira
+    sourceType: jira-ticket
+    format: jira-issue
     authority: implementation-work-item
     owner: platform-engineering
     topics: [environments, provisioning]
@@ -30,9 +32,10 @@ sources:
       adapter: jira
       stableId: PLAT-101
       credentialEnv: AIPP_JIRA_TOKEN
-  - id: example-word-erd
+  - id: example-erd
     name: Environment data model
-    type: sharepoint-docx
+    sourceType: erd
+    format: docx
     authority: engineering-design
     owner: platform-architecture
     topics: [environments, data-model]
@@ -45,6 +48,70 @@ sources:
       adapter: sharepoint
       stableId: environment-erd
       credentialEnv: AIPP_SHAREPOINT_TOKEN
+  - id: example-wiki-instructions
+    name: Environment support runbook
+    sourceType: wiki
+    format: confluence-page
+    authority: operational-procedure
+    owner: platform-support
+    topics: [environments, troubleshooting, escalation]
+    lifecycle: {state: active, reviewCadence: quarterly}
+    demonstrationOnly: true
+    locator:
+      kind: url
+      value: https://example.atlassian.net/wiki/spaces/PLAT/pages/234567
+    retrieval:
+      adapter: confluence
+      stableId: "234567"
+      credentialEnv: AIPP_CONFLUENCE_TOKEN
+  - id: example-word-launch-plan
+    name: Environment launch plan
+    sourceType: word-document
+    format: docx
+    authority: approved-launch-plan
+    owner: product-management
+    topics: [environments, launch, rollout]
+    lifecycle: {state: active, reviewCadence: milestone}
+    demonstrationOnly: true
+    locator:
+      kind: url
+      value: https://example.sharepoint.com/sites/platform/Shared%20Documents/environment-launch-plan.docx
+    retrieval:
+      adapter: sharepoint
+      stableId: environment-launch-plan
+      credentialEnv: AIPP_SHAREPOINT_TOKEN
+  - id: example-roadmap-presentation
+    name: Platform roadmap presentation
+    sourceType: presentation
+    format: pptx
+    authority: approved-product-roadmap
+    owner: product-management
+    topics: [platform, roadmap, environments]
+    lifecycle: {state: active, reviewCadence: milestone}
+    demonstrationOnly: true
+    locator:
+      kind: url
+      value: https://example.sharepoint.com/sites/platform/Shared%20Documents/platform-roadmap.pptx
+    retrieval:
+      adapter: sharepoint
+      stableId: platform-roadmap
+      credentialEnv: AIPP_SHAREPOINT_TOKEN
+  - id: example-service-config
+    name: Environment service configuration
+    sourceType: source-code
+    format: yaml
+    authority: implemented-defaults
+    owner: platform-engineering
+    topics: [environments, defaults, limits]
+    lifecycle: {state: active, reviewCadence: on-change}
+    demonstrationOnly: true
+    locator:
+      kind: url
+      value: https://github.example.com/platform/environment-service/blob/main/config/defaults.yaml
+    retrieval:
+      adapter: github
+      stableId: platform/environment-service:config/defaults.yaml
+      credentialEnv: AIPP_GITHUB_TOKEN
 
 # Local files use the same authority, owner, topic, and lifecycle metadata; only
 # locator.kind and retrieval.adapter change. A future collector resolves remote

@@ -73,11 +73,15 @@ metadata, and reviewed AI-only sidecar statements into a public product
 knowledge object. Writers retain control of the human draft and the sidecars;
 the compiler performs no model calls and invents no facts.
 
-`aipp/sources.yaml` uses the same authority, owner, topic, and lifecycle metadata
+`aipp/sources.yaml` uses the same source type, format, authority, owner, topic, and lifecycle metadata
 for local files and remote systems. A locator selects either a repository path
 or URL, while retrieval metadata identifies the future filesystem, Confluence,
 Jira, SharePoint, or other adapter. Sample remote entries contain credential
 environment-variable names, never credential values.
+
+`aipp/source-types.yaml` makes the expected evidence visible: PRDs, ERDs, wiki
+instructions, Word documents, presentations, Jira tickets, source code or
+configuration, API contracts, approved documentation, and engineering notes.
 
 Pull requests validate and preview AIPP output. A merge to `main` reruns the
 same compiler and refreshes `/aipp/discovery.json`, `/aipp/feed.json`, the

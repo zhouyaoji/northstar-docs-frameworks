@@ -22,6 +22,18 @@ def load(path: Path) -> dict:
 def validate() -> list[str]:
     errors: list[str] = []
     registry = load(AIPP / "sources.yaml")
+    type_catalog = load(AIPP / "source-types.yaml")
+    if type_catalog.get("schemaVersion") != 1:
+        errors.append("aipp/source-types.yaml: schemaVersion must be 1")
+    source_types = type_catalog.get("sourceTypes", [])
+    source_type_ids = [item.get("id") for item in source_types]
+    if len(source_type_ids) != len(set(source_type_ids)):
+        errors.append("aipp/source-types.yaml: source type IDs must be unique")
+    for item in source_types:
+        label = item.get("id", "<missing source type id>")
+        for field in ("id", "name", "typicalAuthority", "typicalOwners", "commonFormats"):
+            if not item.get(field):
+                errors.append(f"source type {label}: missing field {field}")
     if registry.get("schemaVersion") != 1:
         errors.append("aipp/sources.yaml: schemaVersion must be 1")
     sources = registry.get("sources", [])
@@ -30,9 +42,11 @@ def validate() -> list[str]:
         errors.append("aipp/sources.yaml: source IDs must be unique")
     for source in sources:
         label = source.get("id", "<missing source id>")
-        for field in ("id", "name", "type", "authority", "owner", "topics", "lifecycle", "locator", "retrieval"):
+        for field in ("id", "name", "sourceType", "format", "authority", "owner", "topics", "lifecycle", "locator", "retrieval"):
             if not source.get(field):
                 errors.append(f"{label}: missing source field {field}")
+        if source.get("sourceType") not in source_type_ids:
+            errors.append(f"{label}: unknown sourceType {source.get('sourceType')!r}")
         locator = source.get("locator", {})
         kind, value = locator.get("kind"), locator.get("value")
         if kind == "path":
@@ -50,6 +64,19 @@ def validate() -> list[str]:
                 errors.append(f"{label}: invalid source URL")
         else:
             errors.append(f"{label}: locator.kind must be path or url")
+
+    examples = load(AIPP / "sample-sources" / "source-registry.example.yaml")
+    for source in examples.get("sources", []):
+        label = f"sample source {source.get('id', '<missing source id>')}"
+        for field in ("id", "name", "sourceType", "format", "authority", "owner", "topics", "lifecycle", "locator", "retrieval"):
+            if not source.get(field):
+                errors.append(f"{label}: missing source field {field}")
+        if source.get("sourceType") not in source_type_ids:
+            errors.append(f"{label}: unknown sourceType {source.get('sourceType')!r}")
+        locator = source.get("locator", {})
+        parsed = urlparse(str(locator.get("value")))
+        if locator.get("kind") != "url" or parsed.scheme not in {"https", "http"} or not parsed.netloc:
+            errors.append(f"{label}: sample locator must be a valid URL")
 
     manifest = load(ROOT / "content" / "manifest.yaml")
     page_ids = {page["id"] for page in manifest.get("pages", [])}

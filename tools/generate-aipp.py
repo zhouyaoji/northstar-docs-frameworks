@@ -75,7 +75,8 @@ def main() -> None:
         record = {
             "source_id": source_id,
             "name": source["name"],
-            "type": source["type"],
+            "source_type": source["sourceType"],
+            "format": source["format"],
             "authority": source["authority"],
             "owner": source["owner"],
             "topics": source["topics"],
