@@ -1,0 +1,57 @@
+schemaVersion: 1
+sourceTypes:
+  - id: prd
+    name: Product requirements document (PRD)
+    typicalAuthority: product intent, audience, requirements, and acceptance criteria
+    typicalOwners: [product-management]
+    commonFormats: [confluence-page, docx, google-doc]
+  - id: erd
+    name: Engineering requirements or design document (ERD)
+    typicalAuthority: architecture, data model, constraints, and design decisions
+    typicalOwners: [engineering, platform-architecture]
+    commonFormats: [docx, confluence-page, pdf]
+  - id: wiki
+    name: Wiki instructions or source information
+    typicalAuthority: team procedures, operational knowledge, and working context
+    typicalOwners: [engineering, support, documentation]
+    commonFormats: [confluence-page, markdown, notion-page]
+  - id: word-document
+    name: Word document
+    typicalAuthority: depends on the document's declared purpose and owner
+    typicalOwners: [product-management, engineering, documentation]
+    commonFormats: [docx]
+  - id: presentation
+    name: Presentation
+    typicalAuthority: strategy, roadmap, launch context, and stakeholder decisions
+    typicalOwners: [product-management, leadership, enablement]
+    commonFormats: [pptx, google-slides, pdf]
+  - id: jira-ticket
+    name: Jira ticket
+    typicalAuthority: scoped implementation behavior, acceptance criteria, and defect history
+    typicalOwners: [engineering, product-management]
+    commonFormats: [jira-issue]
+  - id: source-code
+    name: Source code or configuration
+    typicalAuthority: implemented behavior and defaults
+    typicalOwners: [engineering]
+    commonFormats: [source-file, yaml, json, toml]
+  - id: api-contract
+    name: API contract
+    typicalAuthority: endpoints, schemas, parameters, and response codes
+    typicalOwners: [engineering, api-governance]
+    commonFormats: [openapi, protobuf, graphql-schema]
+  - id: published-docs
+    name: Approved human documentation
+    typicalAuthority: supported user guidance and public terminology
+    typicalOwners: [documentation]
+    commonFormats: [markdown, restructuredtext, asciidoc, html]
+  - id: content-manifest
+    name: Content manifest
+    typicalAuthority: document identity, navigation, and source relationships
+    typicalOwners: [documentation]
+    commonFormats: [yaml, json]
+  - id: engineering-notes
+    name: Engineering notes
+    typicalAuthority: internal implementation context and known edge cases
+    typicalOwners: [engineering]
+    commonFormats: [markdown, text, confluence-page]

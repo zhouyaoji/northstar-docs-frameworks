@@ -2,7 +2,8 @@ schemaVersion: 1
 sources:
   - id: northstar-content-manifest
     name: Northstar content manifest
-    type: repository-file
+    sourceType: content-manifest
+    format: yaml
     authority: documentation-structure
     owner: documentation
     topics: [navigation, pages]
@@ -14,7 +15,8 @@ sources:
       adapter: filesystem
   - id: northstar-human-docs
     name: Canonical Northstar Markdown
-    type: repository-directory
+    sourceType: published-docs
+    format: markdown
     authority: approved-human-documentation
     owner: documentation
     topics: [platform, profiles, environments, api, style]
@@ -26,7 +28,8 @@ sources:
       adapter: filesystem
   - id: northstar-openapi
     name: Northstar OpenAPI description
-    type: openapi
+    sourceType: api-contract
+    format: openapi
     authority: api-contract
     owner: platform-engineering
     topics: [api, profiles, environments]
@@ -38,7 +41,8 @@ sources:
       adapter: filesystem
   - id: northstar-engineering-notes
     name: Fictional platform engineering notes
-    type: repository-file
+    sourceType: engineering-notes
+    format: markdown
     authority: internal-engineering-notes
     owner: platform-engineering
     topics: [profiles, provisioning, failures, retries]
