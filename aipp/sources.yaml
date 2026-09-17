@@ -1,0 +1,51 @@
+schemaVersion: 1
+sources:
+  - id: northstar-content-manifest
+    name: Northstar content manifest
+    type: repository-file
+    authority: documentation-structure
+    owner: documentation
+    topics: [navigation, pages]
+    lifecycle: {state: active, reviewCadence: on-change}
+    locator:
+      kind: path
+      value: content/manifest.yaml
+    retrieval:
+      adapter: filesystem
+  - id: northstar-human-docs
+    name: Canonical Northstar Markdown
+    type: repository-directory
+    authority: approved-human-documentation
+    owner: documentation
+    topics: [platform, profiles, environments, api, style]
+    lifecycle: {state: active, reviewCadence: on-change}
+    locator:
+      kind: path
+      value: content/markdown
+    retrieval:
+      adapter: filesystem
+  - id: northstar-openapi
+    name: Northstar OpenAPI description
+    type: openapi
+    authority: api-contract
+    owner: platform-engineering
+    topics: [api, profiles, environments]
+    lifecycle: {state: active, reviewCadence: on-change}
+    locator:
+      kind: path
+      value: sites/redocly/openapi.yaml
+    retrieval:
+      adapter: filesystem
+  - id: northstar-engineering-notes
+    name: Fictional platform engineering notes
+    type: repository-file
+    authority: internal-engineering-notes
+    owner: platform-engineering
+    topics: [profiles, provisioning, failures, retries]
+    lifecycle: {state: active, reviewCadence: demo-release}
+    demonstrationOnly: true
+    locator:
+      kind: path
+      value: aipp/sample-sources/platform-engineering-notes.md
+    retrieval:
+      adapter: filesystem

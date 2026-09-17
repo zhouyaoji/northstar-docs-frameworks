@@ -1,0 +1,18 @@
+schemaVersion: 1
+documentId: guides/create-environment
+sourceIds: [northstar-human-docs, northstar-openapi, northstar-engineering-notes]
+review: {state: approved-for-demo, roles: [writer, engineer]}
+aiOnlyStatements:
+  - id: create-validation-order
+    kind: troubleshooting
+    text: Northstar validates profile existence, project permissions, provider-region compatibility, and quota before allocating infrastructure.
+    sourceIds: [northstar-engineering-notes]
+  - id: create-duplicate-recovery
+    kind: troubleshooting
+    text: If a client loses the create response, it should query the project environment list by the requested name before submitting another create request because no idempotency-key contract is documented.
+    sourceIds: [northstar-engineering-notes]
+  - id: create-response-discrepancy
+    kind: support_case
+    text: The tutorial and OpenAPI description disagree about the create path and success response; the discrepancy requires human resolution and must not be presented as reconciled behavior.
+    sourceIds: [northstar-human-docs, northstar-openapi, northstar-engineering-notes]
+    unresolved: true

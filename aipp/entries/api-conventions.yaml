@@ -1,0 +1,10 @@
+schemaVersion: 1
+documentId: reference/api-conventions
+sourceIds: [northstar-human-docs, northstar-openapi, northstar-engineering-notes]
+review: {state: approved-for-demo, roles: [writer, engineer]}
+aiOnlyStatements:
+  - id: api-contract-discrepancy
+    kind: support_case
+    text: The human tutorial demonstrates 202 Accepted at an unscoped environments path, while the OpenAPI contract defines 201 Created at a project-scoped path.
+    sourceIds: [northstar-human-docs, northstar-openapi, northstar-engineering-notes]
+    unresolved: true

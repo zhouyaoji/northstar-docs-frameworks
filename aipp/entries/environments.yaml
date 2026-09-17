@@ -1,0 +1,9 @@
+schemaVersion: 1
+documentId: concepts/environments
+sourceIds: [northstar-human-docs, northstar-engineering-notes]
+review: {state: approved-for-demo, roles: [writer, engineer]}
+aiOnlyStatements:
+  - id: environment-profile-pin
+    kind: reference
+    text: An environment records the exact cluster-profile version used at provisioning time.
+    sourceIds: [northstar-engineering-notes]

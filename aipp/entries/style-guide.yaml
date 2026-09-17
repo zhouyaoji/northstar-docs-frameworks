@@ -1,0 +1,5 @@
+schemaVersion: 1
+documentId: reference/style-guide
+sourceIds: [northstar-human-docs]
+review: {state: approved-for-demo, roles: [writer]}
+aiOnlyStatements: []
