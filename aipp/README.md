@@ -12,6 +12,9 @@ does not silently rewrite the documentation.
   likely owners, and common file or service formats.
 - `entries/*.yaml` associates a human document with sources and approved
   AI-only statements.
+- `schemas/sidecar.schema.yaml` is the versioned JSON Schema contract for every
+  page sidecar; YAML is used for authoring, but the structure is standard JSON
+  Schema Draft 2020-12.
 - `sample-sources/` contains explicitly fictional internal material that makes
   the collection workflow demonstrable without external credentials.
 - `tools/validate-aipp.py` checks sources, entries, citations, review state, and
@@ -21,6 +24,8 @@ does not silently rewrite the documentation.
 Only entries with `review.state: approved-for-demo` enter the compiled object.
 The pipeline creates the same preview on a pull request and refreshes the
 published AIPP files after the approved commit is merged to `main`.
+The schema is published with those artifacts at
+`/aipp/schemas/sidecar.schema.yaml` and advertised by `discovery.json`.
 
 ## Source locations
 
@@ -51,6 +56,11 @@ evidence.
 python tools/validate-aipp.py
 python tools/generate-aipp.py
 ```
+
+The validator first checks every sidecar against the published schema, then
+applies repository-wide checks that JSON Schema alone cannot express: document
+coverage, globally unique statement IDs, and valid references to registered
+sources.
 
 The first version intentionally performs no model calls and fetches no external
 systems. Source collection skills and AIPP-aware assistant comparisons can be
