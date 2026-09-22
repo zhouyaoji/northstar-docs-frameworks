@@ -6,6 +6,7 @@ from __future__ import annotations
 import hashlib
 import json
 import os
+import shutil
 import subprocess
 from datetime import datetime, timezone
 from pathlib import Path
@@ -106,10 +107,17 @@ def main() -> None:
         "renderings": {"documentation_lab": f"{SITE_URL}/", "llms": f"{SITE_URL}/llms.txt"},
     }
     OUTPUT.mkdir(parents=True, exist_ok=True)
+    schema_output = OUTPUT / "schemas"
+    schema_output.mkdir(parents=True, exist_ok=True)
+    shutil.copy2(AIPP / "schemas" / "sidecar.schema.yaml", schema_output / "sidecar.schema.yaml")
     object_name = "northstar-platform.json"
     (OUTPUT / object_name).write_text(json.dumps(obj, indent=2) + "\n", encoding="utf-8")
     (OUTPUT / "source-report.json").write_text(json.dumps({"generated_at": generated_at, "sources": source_report}, indent=2) + "\n", encoding="utf-8")
-    discovery = {"schema_version": 1, "objects": [{"object_id": obj["object_id"], "url": f"{SITE_URL}/aipp/{object_name}", "state": "approved-for-demo"}]}
+    discovery = {
+        "schema_version": 1,
+        "schemas": [{"name": "page-sidecar", "version": 1, "url": f"{SITE_URL}/aipp/schemas/sidecar.schema.yaml"}],
+        "objects": [{"object_id": obj["object_id"], "url": f"{SITE_URL}/aipp/{object_name}", "state": "approved-for-demo"}],
+    }
     feed = {"schema_version": 1, "events": [{"event": "published", "object_id": obj["object_id"], "version": commit, "url": f"{SITE_URL}/aipp/{object_name}"}]}
     (OUTPUT / "discovery.json").write_text(json.dumps(discovery, indent=2) + "\n", encoding="utf-8")
     (OUTPUT / "feed.json").write_text(json.dumps(feed, indent=2) + "\n", encoding="utf-8")

@@ -8,6 +8,7 @@ from pathlib import Path
 from urllib.parse import urlparse
 
 import yaml
+from jsonschema import Draft202012Validator
 
 ROOT = Path(__file__).resolve().parents[1]
 AIPP = ROOT / "aipp"
@@ -79,12 +80,21 @@ def validate() -> list[str]:
             errors.append(f"{label}: sample locator must be a valid URL")
 
     manifest = load(ROOT / "content" / "manifest.yaml")
+    sidecar_schema = load(AIPP / "schemas" / "sidecar.schema.yaml")
+    try:
+        Draft202012Validator.check_schema(sidecar_schema)
+    except Exception as error:
+        errors.append(f"aipp/schemas/sidecar.schema.yaml: invalid schema: {error}")
+    sidecar_validator = Draft202012Validator(sidecar_schema)
     page_ids = {page["id"] for page in manifest.get("pages", [])}
     entry_pages: set[str] = set()
     statement_ids: set[str] = set()
     for path in sorted((AIPP / "entries").glob("*.yaml")):
         entry = load(path)
         label = str(path.relative_to(ROOT))
+        for error in sorted(sidecar_validator.iter_errors(entry), key=lambda item: list(item.path)):
+            location = ".".join(str(part) for part in error.path) or "<root>"
+            errors.append(f"{label}: schema error at {location}: {error.message}")
         if entry.get("schemaVersion") != 1:
             errors.append(f"{label}: schemaVersion must be 1")
         document_id = entry.get("documentId")

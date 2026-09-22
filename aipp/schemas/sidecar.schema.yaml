@@ -1,0 +1,55 @@
+$schema: https://json-schema.org/draft/2020-12/schema
+$id: https://zhouyaoji.github.io/northstar-docs-frameworks/aipp/schemas/sidecar.schema.yaml
+title: Northstar AIPP page sidecar
+description: Writer-controlled metadata and AI-only statements associated with one human documentation page.
+type: object
+additionalProperties: false
+required: [schemaVersion, documentId, sourceIds, review, aiOnlyStatements]
+properties:
+  schemaVersion:
+    const: 1
+  documentId:
+    type: string
+    minLength: 1
+  sourceIds:
+    type: array
+    minItems: 1
+    uniqueItems: true
+    items: {type: string, minLength: 1}
+  review:
+    type: object
+    additionalProperties: false
+    required: [state, roles]
+    properties:
+      state:
+        enum: [draft, in-review, approved-for-demo, rejected]
+      roles:
+        type: array
+        minItems: 1
+        uniqueItems: true
+        items: {type: string, minLength: 1}
+  aiOnlyStatements:
+    type: array
+    items:
+      type: object
+      additionalProperties: false
+      required: [id, kind, text, sourceIds]
+      properties:
+        id:
+          type: string
+          pattern: ^[a-z0-9]+(?:-[a-z0-9]+)*$
+        kind:
+          enum: [concept, environment, instruction, reference, support_case, troubleshooting]
+        text:
+          type: string
+          minLength: 1
+        sourceIds:
+          type: array
+          minItems: 1
+          uniqueItems: true
+          items: {type: string, minLength: 1}
+        unresolved:
+          type: boolean
+        appliesWhen:
+          type: object
+          minProperties: 1

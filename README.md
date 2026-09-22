@@ -85,7 +85,8 @@ configuration, API contracts, approved documentation, and engineering notes.
 
 Pull requests validate and preview AIPP output. A merge to `main` reruns the
 same compiler and refreshes `/aipp/discovery.json`, `/aipp/feed.json`, the
-compiled Northstar object, and its source report as part of the Pages artifact.
+compiled Northstar object, its source report, and the versioned sidecar schema
+as part of the Pages artifact.
 See [`aipp/README.md`](aipp/README.md) for the authoring model.
 
 ## CI/CD automation
