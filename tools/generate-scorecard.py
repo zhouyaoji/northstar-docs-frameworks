@@ -297,6 +297,79 @@ def evaluate_renderer(renderer: str, criteria: list[dict], expected_titles: list
     ]
 
 
+def evaluate_aipp(criteria: list[dict], expected_titles: list[str], benchmarks: list[dict]) -> list[dict]:
+    directory = PUBLIC / "aipp"
+    object_path = directory / "northstar-platform.json"
+    object_data = json.loads(object_path.read_text(encoding="utf-8")) if object_path.is_file() else {}
+    sections = object_data.get("content", {}).get("sections", [])
+    statements = object_data.get("content", {}).get("statements", [])
+    citations = object_data.get("content", {}).get("citations", [])
+    statements_by_id = {item.get("statement_id"): item for item in statements}
+    retrieval_sections = [
+        (
+            section.get("title", ""),
+            "\n".join(
+                str(statements_by_id.get(statement_id, {}).get("text", ""))
+                for statement_id in section.get("statement_ids", [])
+            ),
+        )
+        for section in sections
+    ]
+    checks: dict[str, tuple[bool | None, str]] = {}
+    overview = directory / "index.html"
+    checks["publication.renderer_output"] = (
+        overview.is_file(),
+        "human-readable AIPP overview published" if overview.is_file() else "AIPP overview missing",
+    )
+    section_titles = {section.get("title") for section in sections}
+    checks["ai.aipp_structured_object"] = (
+        object_path.is_file() and set(expected_titles) == section_titles and bool(statements),
+        f"{len(sections)}/{len(expected_titles)} canonical sections and {len(statements)} statements compiled",
+    )
+    citation_ids = {item.get("source_id") for item in citations}
+    missing_source_refs = sorted({source_id for item in statements for source_id in item.get("source_ids", []) if source_id not in citation_ids})
+    provenance_fields = {"source_id", "source_type", "format", "authority", "owner", "topics", "lifecycle", "locator", "retrieval"}
+    incomplete_citations = [item.get("source_id", "<unknown>") for item in citations if not provenance_fields.issubset(item)]
+    checks["ai.aipp_source_provenance"] = (
+        bool(statements) and all(item.get("source_ids") for item in statements) and not missing_source_refs and not incomplete_citations,
+        f"{len(statements)} statements cite {len(citations)} registered sources; missing references: {missing_source_refs or 'none'}; incomplete provenance: {incomplete_citations or 'none'}",
+    )
+    sidecars = [yaml.safe_load(path.read_text(encoding="utf-8")) for path in sorted((ROOT / "aipp" / "entries").glob("*.yaml"))]
+    approved = [item for item in sidecars if item.get("review", {}).get("state") == "approved-for-demo"]
+    ai_only_count = sum(len(item.get("aiOnlyStatements", [])) for item in approved)
+    checks["ai.aipp_reviewed_sidecars"] = (
+        len(approved) == len(expected_titles),
+        f"{len(approved)}/{len(expected_titles)} page sidecars approved; {ai_only_count} reviewed AI-only statements",
+    )
+    unresolved = [item for item in statements if item.get("unresolved") is True]
+    checks["ai.aipp_conflict_signaling"] = (
+        bool(unresolved),
+        f"{len(unresolved)} explicitly unresolved source-conflict statement(s)",
+    )
+    required_artifacts = (
+        "discovery.json", "feed.json", "northstar-platform.json", "source-report.json", "schemas/sidecar.schema.yaml"
+    )
+    missing_artifacts = [name for name in required_artifacts if not (directory / name).is_file()]
+    checks["ai.aipp_discovery_feed"] = (
+        not missing_artifacts,
+        "all discovery artifacts published" if not missing_artifacts else f"missing: {', '.join(missing_artifacts)}",
+    )
+    benchmark_failures = []
+    for benchmark in benchmarks:
+        actual = retrieve(benchmark["question"], retrieval_sections)
+        if benchmark["expectedTitle"] not in actual:
+            benchmark_failures.append(f"{benchmark['id']}: expected {benchmark['expectedTitle']!r} in top 3, got {actual!r}")
+    checks["ai.retrieval_benchmarks"] = (
+        bool(benchmarks) and not benchmark_failures,
+        f"{len(benchmarks) - len(benchmark_failures)}/{len(benchmarks)} retrieval benchmarks passed"
+        + (f"; {'; '.join(benchmark_failures)}" if benchmark_failures else ""),
+    )
+    return [
+        result(criterion, "aipp", *checks.get(criterion["id"], (None, "criterion does not apply to the AIPP knowledge layer")))
+        for criterion in criteria
+    ]
+
+
 def scores(results: list[dict]) -> dict:
     grouped: dict[str, list[dict]] = defaultdict(list)
     for item in results:
@@ -382,16 +455,19 @@ def render_markdown(report: dict) -> str:
         "",
         f"Shared content quality: **{content_score:.1f}** ({report['sharedContent']['scores']['groupCoverage']['content']['evaluated']}/{report['sharedContent']['scores']['groupCoverage']['content']['total']} criteria evaluated)" if content_score is not None else "Shared content quality: **Not evaluated**",
         "",
-        "| Renderer | Renderer implementation | AI readiness | Publication operations | Blocking failures |",
+        "| Implementation / knowledge layer | Renderer implementation | AI readiness | Publication operations | Blocking failures |",
         "| --- | ---: | ---: | ---: | ---: |",
     ]
     for renderer in report["renderers"]:
         groups = renderer["scores"]["groups"]
         coverage = renderer["scores"]["groupCoverage"]
+        renderer_score = f"{groups['renderer']:.1f}" if groups.get("renderer") is not None else "Not evaluated"
+        ai_score = f"{groups['ai']:.1f}" if groups.get("ai") is not None else "Not evaluated"
+        publication_score = f"{groups['publication']:.1f}" if groups.get("publication") is not None else "Not evaluated"
         lines.append(
-            f"| {renderer['name']} | {groups.get('renderer', 0):.1f} ({coverage['renderer']['evaluated']}/{coverage['renderer']['total']}) | "
-            f"{groups.get('ai', 0):.1f} ({coverage['ai']['evaluated']}/{coverage['ai']['total']}) | "
-            f"{groups.get('publication', 0):.1f} ({coverage['publication']['evaluated']}/{coverage['publication']['total']}) | "
+            f"| {renderer['name']} | {renderer_score} ({coverage['renderer']['evaluated']}/{coverage['renderer']['total']}) | "
+            f"{ai_score} ({coverage['ai']['evaluated']}/{coverage['ai']['total']}) | "
+            f"{publication_score} ({coverage['publication']['evaluated']}/{coverage['publication']['total']}) | "
             f"{len(renderer['scores']['blockingFailures'])} |"
         )
     lines.extend(["", "## Prioritized improvements", "", "| Priority | Renderer | Improvement | Group | Impact | Effort | Feasibility | Opportunity |", "| ---: | --- | --- | --- | --- | --- | --- | ---: |"])
@@ -417,11 +493,15 @@ def render_markdown(report: dict) -> str:
 def render_html(report: dict) -> str:
     content_score = report["sharedContent"]["scores"]["groups"].get("content")
     content_coverage = report["sharedContent"]["scores"]["groupCoverage"]["content"]
+    def score_cell(renderer: dict, group: str) -> str:
+        score = renderer["scores"]["groups"].get(group)
+        coverage = renderer["scores"]["groupCoverage"][group]
+        label = f"{score:.1f}" if score is not None else "Not evaluated"
+        return f"<td>{label}<small>{coverage['evaluated']}/{coverage['total']} criteria</small></td>"
+
     matrix_rows = "".join(
         f'<tr><th scope="row"><a href="#{html.escape(renderer["name"])}">{html.escape(renderer["name"])}</a></th>'
-        f'<td>{renderer["scores"]["groups"].get("renderer", 0):.1f}<small>{renderer["scores"]["groupCoverage"]["renderer"]["evaluated"]}/{renderer["scores"]["groupCoverage"]["renderer"]["total"]} criteria</small></td>'
-        f'<td>{renderer["scores"]["groups"].get("ai", 0):.1f}<small>{renderer["scores"]["groupCoverage"]["ai"]["evaluated"]}/{renderer["scores"]["groupCoverage"]["ai"]["total"]} criteria</small></td>'
-        f'<td>{renderer["scores"]["groups"].get("publication", 0):.1f}<small>{renderer["scores"]["groupCoverage"]["publication"]["evaluated"]}/{renderer["scores"]["groupCoverage"]["publication"]["total"]} criteria</small></td></tr>'
+        f'{score_cell(renderer, "renderer")}{score_cell(renderer, "ai")}{score_cell(renderer, "publication")}</tr>'
         for renderer in report["renderers"]
     )
     improvement_rows = "".join(
@@ -442,7 +522,7 @@ def render_html(report: dict) -> str:
     return f'''<!doctype html>
 <html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><meta name="description" content="Repeatable documentation quality evidence for the Northstar renderer comparison."><title>Northstar documentation scorecard</title><style>
 :root{{font-family:system-ui,sans-serif;color-scheme:light dark}}body{{margin:0;background:#071525;color:#ecf5ff}}nav,main{{max-width:1180px;margin:auto;padding:1.2rem}}a{{color:#78d8ff}}h1{{font-size:clamp(2rem,6vw,4rem);margin:.4rem 0}}.lead{{max-width:850px;color:#b9cee3;font-size:1.1rem}}.shared{{background:#0c2034;border:1px solid #31506c;border-radius:14px;padding:1rem;margin:2rem 0}}.shared strong{{font-size:2rem;color:#77e69b}}section{{margin:3rem 0;scroll-margin-top:1rem}}.table{{overflow:auto}}table{{width:100%;border-collapse:collapse;background:#0c2034}}th,td{{text-align:left;vertical-align:top;padding:.7rem;border-bottom:1px solid #31506c}}thead th{{color:#b9cee3}}td small{{display:block;color:#b9cee3;margin-top:.2rem}}.pass{{color:#77e69b}}.fail{{color:#ff9898}}.not_evaluated{{color:#b9cee3}}code{{white-space:nowrap}}tr:target{{outline:2px solid #78d8ff;outline-offset:-2px}}
-</style></head><body><nav><a href="../">← Docs Lab</a></nav><main><p>DOCUMENTATION QUALITY</p><h1>Northstar scorecard</h1><p class="lead">Four isolated views under rubric {html.escape(report['rubricVersion'])}: shared content quality, renderer implementation, AI readiness, and publication operations. Scores reflect implemented automated evidence only.</p><div class="shared"><h2>Shared content quality</h2><strong>{content_score:.1f}</strong><p>{content_coverage['evaluated']} of {content_coverage['total']} criteria evaluated once; this score does not advantage any renderer.</p></div><section><h2>Renderer comparison</h2><div class="table"><table><thead><tr><th>Renderer</th><th>Renderer implementation</th><th>AI readiness</th><th>Publication operations</th></tr></thead><tbody>{matrix_rows}</tbody></table></div></section><section><h2>Prioritized improvements</h2><p>Default priority combines impact, effort, and feasibility. Score opportunity is available rubric weight, not a promised gain.</p><div class="table"><table><thead><tr><th>Priority</th><th>Renderer</th><th>Improvement</th><th>Group</th><th>Impact</th><th>Effort</th><th>Feasibility</th><th>Fix owner</th><th>Opportunity</th></tr></thead><tbody>{improvement_rows}</tbody></table></div></section>{''.join(sections)}<p>Commit {html.escape(report['commit'])} · Generated {html.escape(report['generatedAt'])}. Rubric 1.0 baseline comparison is disabled because the scoring groups changed. <a href="scorecard.json">JSON</a> · <a href="scorecard.md">Markdown</a></p></main></body></html>'''
+</style></head><body><nav><a href="../">← Docs Lab</a> · <a href="../aipp/">AIPP overview</a></nav><main><p>DOCUMENTATION QUALITY</p><h1>Northstar scorecard</h1><p class="lead">Four isolated views under rubric {html.escape(report['rubricVersion'])}: shared content quality, renderer implementation, AI readiness, and publication operations. AIPP is evaluated as a knowledge layer, not as an eighth renderer; non-applicable criteria remain not evaluated.</p><div class="shared"><h2>Shared content quality</h2><strong>{content_score:.1f}</strong><p>{content_coverage['evaluated']} of {content_coverage['total']} criteria evaluated once; this score does not advantage any implementation.</p></div><section><h2>Implementation and knowledge-layer comparison</h2><div class="table"><table><thead><tr><th>Implementation / knowledge layer</th><th>Renderer implementation</th><th>AI readiness</th><th>Publication operations</th></tr></thead><tbody>{matrix_rows}</tbody></table></div></section><section><h2>Prioritized improvements</h2><p>Default priority combines impact, effort, and feasibility. Score opportunity is available rubric weight, not a promised gain.</p><div class="table"><table><thead><tr><th>Priority</th><th>Implementation</th><th>Improvement</th><th>Group</th><th>Impact</th><th>Effort</th><th>Feasibility</th><th>Fix owner</th><th>Opportunity</th></tr></thead><tbody>{improvement_rows}</tbody></table></div></section>{''.join(sections)}<p>Commit {html.escape(report['commit'])} · Generated {html.escape(report['generatedAt'])}. Earlier rubric baselines are disabled because scoring groups and AIPP criteria changed. <a href="scorecard.json">JSON</a> · <a href="scorecard.md">Markdown</a></p></main></body></html>'''
 
 
 def main() -> int:
@@ -472,6 +552,12 @@ def main() -> int:
             round(renderer_scores["overall"] - baseline_score, 1) if baseline_score is not None else None
         )
         renderer_reports.append({"name": renderer, "scores": renderer_scores, "results": renderer_results})
+    aipp_results = [
+        decorate_result(item, groups, recommendations)
+        for item in evaluate_aipp(criteria, expected_titles, benchmarks)
+        if groups[item["criterion"]] != "content"
+    ]
+    renderer_reports.append({"name": "aipp", "scores": scores(aipp_results), "results": aipp_results})
     content_criteria = [criterion for criterion in criteria if groups[criterion["id"]] == "content"]
     content_results = [
         decorate_result(item, groups, recommendations)
@@ -501,7 +587,7 @@ def main() -> int:
     (OUTPUT / "scorecard.md").write_text(markdown + "\n", encoding="utf-8")
     (OUTPUT / "index.html").write_text(render_html(report), encoding="utf-8")
     failing = [renderer["name"] for renderer in renderer_reports if renderer["scores"]["blockingFailures"]]
-    print("Generated scorecards for " + ", ".join(RENDERERS) + ".")
+    print("Generated scorecards for " + ", ".join(RENDERERS) + ", and the AIPP knowledge layer.")
     if failing:
         print("Blocking scorecard failures: " + ", ".join(failing), file=sys.stderr)
         return 1

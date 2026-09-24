@@ -89,6 +89,14 @@ compiled Northstar object, its source report, and the versioned sidecar schema
 as part of the Pages artifact.
 See [`aipp/README.md`](aipp/README.md) for the authoring model.
 
+The Docs Lab landing page presents AIPP as a separate knowledge-layer
+experiment. Its `/aipp/` overview explains the workflow, features, strengths,
+and use cases and links to every published artifact. Rubric 1.2 also adds AIPP
+to the scorecard comparison. Renderer-only checks remain not evaluated for
+AIPP, while AIPP-only checks remain not evaluated for renderers; the scorecard
+shows both the score and evaluated-criteria coverage so those differences stay
+visible.
+
 ## CI/CD automation
 
 GitHub Actions is both the continuous integration (CI) and continuous delivery
