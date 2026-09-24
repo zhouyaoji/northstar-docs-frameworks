@@ -1,5 +1,5 @@
 schemaVersion: 1
-rubricVersion: 1.1.0
+rubricVersion: 1.2.0
 name: Northstar documentation quality rubric
 principles:
   - Scores measure repeatable conformance to declared criteria, not objective documentation quality.
@@ -42,6 +42,11 @@ scoreGroups:
       - ai.llms_exports
       - ai.assistant_installed
       - ai.retrieval_benchmarks
+      - ai.aipp_structured_object
+      - ai.aipp_source_provenance
+      - ai.aipp_reviewed_sidecars
+      - ai.aipp_conflict_signaling
+      - ai.aipp_discovery_feed
       - ai.grounded_answers
   publication:
     label: Publication operations
@@ -141,6 +146,41 @@ recommendations:
     feasibility: custom
     providedBy: northstar-adapter
     fixOwner: ai-documentation
+  ai.aipp_structured_object:
+    summary: Publish a valid structured knowledge object containing every canonical section.
+    impact: high
+    effort: medium
+    feasibility: custom
+    providedBy: aipp-compiler
+    fixOwner: ai-documentation
+  ai.aipp_source_provenance:
+    summary: Attach registered source references and provenance metadata to every published statement.
+    impact: high
+    effort: medium
+    feasibility: custom
+    providedBy: aipp-compiler
+    fixOwner: content-operations
+  ai.aipp_reviewed_sidecars:
+    summary: Add and approve a schema-valid sidecar for every canonical page.
+    impact: high
+    effort: medium
+    feasibility: custom
+    providedBy: writer-workflow
+    fixOwner: documentation
+  ai.aipp_conflict_signaling:
+    summary: Preserve unresolved source conflicts as explicit machine-readable statements.
+    impact: high
+    effort: low
+    feasibility: custom
+    providedBy: writer-workflow
+    fixOwner: documentation
+  ai.aipp_discovery_feed:
+    summary: Publish discoverable object, schema, provenance, and feed endpoints.
+    impact: medium
+    effort: low
+    feasibility: custom
+    providedBy: publishing-pipeline
+    fixOwner: documentation-platform
   publication.renderer_output:
     summary: Repair the renderer build or adapter so it produces a complete HTML site.
     impact: high
@@ -254,6 +294,41 @@ criteria:
     blocking: false
     status: implemented
     description: The zero-cost assistant retrieves the expected page for fixed benchmark questions.
+  - id: ai.aipp_structured_object
+    category: AI readiness
+    method: automated
+    weight: 10
+    blocking: true
+    status: implemented
+    description: The AIPP object represents every canonical document as structured, machine-readable knowledge.
+  - id: ai.aipp_source_provenance
+    category: AI readiness
+    method: automated
+    weight: 10
+    blocking: true
+    status: implemented
+    description: Every AIPP statement cites registered sources with provenance metadata.
+  - id: ai.aipp_reviewed_sidecars
+    category: AI readiness
+    method: automated
+    weight: 10
+    blocking: true
+    status: implemented
+    description: Every canonical document has a schema-valid sidecar in an approved publication state.
+  - id: ai.aipp_conflict_signaling
+    category: AI readiness
+    method: automated
+    weight: 5
+    blocking: false
+    status: implemented
+    description: Conflicting source claims can be preserved as explicitly unresolved statements.
+  - id: ai.aipp_discovery_feed
+    category: AI readiness
+    method: automated
+    weight: 5
+    blocking: true
+    status: implemented
+    description: Discovery, feed, schema, object, and provenance artifacts are published together.
   - id: scope.requirements_approval
     category: Scope and requirements
     method: human

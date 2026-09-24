@@ -107,6 +107,7 @@ def main() -> None:
         "renderings": {"documentation_lab": f"{SITE_URL}/", "llms": f"{SITE_URL}/llms.txt"},
     }
     OUTPUT.mkdir(parents=True, exist_ok=True)
+    shutil.copy2(AIPP / "overview.html", OUTPUT / "index.html")
     schema_output = OUTPUT / "schemas"
     schema_output.mkdir(parents=True, exist_ok=True)
     shutil.copy2(AIPP / "schemas" / "sidecar.schema.yaml", schema_output / "sidecar.schema.yaml")

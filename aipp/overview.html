@@ -1,0 +1,75 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <meta name="description" content="A writer-centered AIPP knowledge layer with reviewed AI-only context, source provenance, discovery, and validation.">
+    <title>Northstar AIPP knowledge layer</title>
+    <style>
+      :root { color-scheme: light dark; font-family: system-ui, sans-serif; }
+      body { margin: 0; background: #071525; color: #ecf5ff; }
+      nav, main { max-width: 1050px; margin: auto; padding: 1.2rem 1.5rem; }
+      a { color: #78d8ff; }
+      h1 { margin: .4rem 0 1rem; font-size: clamp(2.4rem, 7vw, 4.8rem); line-height: 1; }
+      h2 { margin-top: 3rem; }
+      .lead { max-width: 820px; color: #b9cee3; font-size: 1.2rem; }
+      .grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(230px, 1fr)); gap: 1rem; }
+      .card { padding: 1.25rem; border: 1px solid #31506c; border-radius: 14px; background: #0c2034; }
+      .card h3 { margin-top: 0; color: #77e69b; }
+      .flow { display: flex; flex-wrap: wrap; align-items: center; gap: .65rem; margin: 1.5rem 0; }
+      .step { padding: .8rem 1rem; border-radius: 10px; background: #0c2034; border: 1px solid #31506c; }
+      .arrow { color: #78d8ff; font-size: 1.3rem; }
+      .artifacts a { display: block; margin: .55rem 0; }
+      code { color: #ffd479; }
+      footer { margin: 3rem 0; color: #89a6bf; }
+    </style>
+  </head>
+  <body>
+    <nav><a href="../">← Docs Lab</a> · <a href="../scorecard/">Scorecards</a></nav>
+    <main>
+      <p>AI PUBLICATION PROTOCOL EXPERIMENT</p>
+      <h1>A reviewed knowledge layer for AI.</h1>
+      <p class="lead">Northstar AIPP combines writer-approved documentation with registered sources and reviewed AI-only context. It gives AI systems structured knowledge, provenance, lifecycle metadata, and explicit uncertainty without replacing the human documentation.</p>
+
+      <h2>How it works</h2>
+      <div class="flow" aria-label="AIPP publication workflow">
+        <span class="step">Human documentation</span><span class="arrow">+</span>
+        <span class="step">Registered sources</span><span class="arrow">+</span>
+        <span class="step">Reviewed sidecars</span><span class="arrow">→</span>
+        <span class="step">Validate and compile</span><span class="arrow">→</span>
+        <span class="step">Published AIPP object</span>
+      </div>
+
+      <h2>Features and strengths</h2>
+      <section class="grid">
+        <article class="card"><h3>Writer controlled</h3><p>Writers select sources, revise the human draft, and approve sidecar knowledge before publication.</p></article>
+        <article class="card"><h3>Source aware</h3><p>PRDs, ERDs, wikis, Word files, presentations, Jira tickets, API contracts, code, and configuration use consistent metadata.</p></article>
+        <article class="card"><h3>AI-only context</h3><p>Reviewed edge cases, support guidance, configuration behavior, and implementation details can be available to AI without crowding the human guide.</p></article>
+        <article class="card"><h3>Provenance</h3><p>Statements cite registered sources with authority, ownership, lifecycle, locator, retrieval method, revision, or content hash.</p></article>
+        <article class="card"><h3>Conflict signaling</h3><p>Contradictory sources remain explicitly unresolved instead of being silently reconciled or hallucinated.</p></article>
+        <article class="card"><h3>Automation ready</h3><p>A versioned schema, validator, compiler, discovery document, feed, and CI publication make the contract repeatable.</p></article>
+      </section>
+
+      <h2>Where it helps</h2>
+      <ul>
+        <li>Grounded documentation assistants and retrieval systems</li>
+        <li>Support and troubleshooting questions that exceed public documentation</li>
+        <li>Configuration, API, and edge-case answers requiring precise sources</li>
+        <li>Reviewable knowledge updates tied to normal pull-request workflows</li>
+        <li>Comparisons between rendered docs, <code>llms.txt</code>, and richer structured context</li>
+      </ul>
+
+      <h2>Explore the artifacts</h2>
+      <div class="card artifacts">
+        <a href="northstar-platform.json">Compiled Northstar knowledge object</a>
+        <a href="source-report.json">Source and provenance report</a>
+        <a href="discovery.json">Discovery document</a>
+        <a href="feed.json">Publication feed</a>
+        <a href="schemas/sidecar.schema.yaml">Versioned sidecar schema</a>
+        <a href="../scorecard/#aipp">AIPP scorecard evidence</a>
+      </div>
+
+      <footer>This is a fictional product demonstration. AIPP supplements the seven renderer experiments; it is not an eighth static-site generator.</footer>
+    </main>
+  </body>
+</html>
