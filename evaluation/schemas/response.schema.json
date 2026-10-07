@@ -1,0 +1,68 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://zhouyaoji.github.io/northstar-docs-frameworks/evaluation/schemas/response.schema.json",
+  "title": "Blinded Northstar model response",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "schemaVersion",
+    "responseId",
+    "runId",
+    "suiteVersion",
+    "caseId",
+    "blindedCondition",
+    "generator",
+    "answer",
+    "citations",
+    "generatedAt"
+  ],
+  "properties": {
+    "schemaVersion": {"const": 1},
+    "responseId": {
+      "type": "string",
+      "pattern": "^[a-z0-9]+(?:-[a-z0-9]+)*$"
+    },
+    "runId": {"type": "string", "minLength": 1},
+    "suiteVersion": {
+      "type": "string",
+      "pattern": "^[0-9]+\\.[0-9]+\\.[0-9]+$"
+    },
+    "caseId": {
+      "type": "string",
+      "pattern": "^[a-z0-9]+(?:-[a-z0-9]+)*$"
+    },
+    "blindedCondition": {
+      "type": "string",
+      "pattern": "^source-[a-z]+$"
+    },
+    "generator": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["provider", "model", "interface"],
+      "properties": {
+        "provider": {"type": "string", "minLength": 1},
+        "model": {"type": "string", "minLength": 1},
+        "interface": {
+          "enum": ["api", "assistant-file-review", "local-model", "manual-import"]
+        },
+        "parameters": {"type": "object"}
+      }
+    },
+    "answer": {"type": "string"},
+    "citations": {
+      "type": "array",
+      "uniqueItems": true,
+      "items": {"type": "string", "minLength": 1}
+    },
+    "usage": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "inputTokens": {"type": "integer", "minimum": 0},
+        "outputTokens": {"type": "integer", "minimum": 0},
+        "latencyMilliseconds": {"type": "integer", "minimum": 0}
+      }
+    },
+    "generatedAt": {"type": "string", "format": "date-time"}
+  }
+}

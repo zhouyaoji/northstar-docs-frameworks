@@ -46,6 +46,8 @@ jobs:
         run: python tools/validate-content.py
       - name: Validate AIPP sources and entries
         run: python tools/validate-aipp.py
+      - name: Validate answer-quality evaluation contract
+        run: python tools/validate-evaluation.py
       - name: Build all sites
         run: ./tools/build-sites.sh
       - name: Check generated links and assets
