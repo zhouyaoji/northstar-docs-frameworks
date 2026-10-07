@@ -69,3 +69,6 @@ Every run must record:
 
 Never commit API keys, access tokens, personal reviewer information, or hidden chain-of-thought.
 
+## Response format
+
+Every generator returns one JSON object per case and blinded condition using `schemas/response.schema.json`. The same contract applies to API output and answers copied from a subscription-based file-reading assistant. Assistants return only their answer and citations; they do not receive gold claims, example answers, condition mappings, or completed judgments.

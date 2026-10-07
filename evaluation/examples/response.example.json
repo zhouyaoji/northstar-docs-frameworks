@@ -1,0 +1,21 @@
+{
+  "schemaVersion": 1,
+  "responseId": "pilot-001-platform-purpose-source-a-codex",
+  "runId": "pilot-001",
+  "suiteVersion": "1.0.0",
+  "caseId": "platform-purpose",
+  "blindedCondition": "source-a",
+  "generator": {
+    "provider": "example-provider",
+    "model": "example-model-version",
+    "interface": "assistant-file-review",
+    "parameters": {
+      "temperature": 0
+    }
+  },
+  "answer": "Northstar stores environment definitions and lets platform teams reuse deployment profiles across environments.",
+  "citations": [
+    "northstar-human-docs"
+  ],
+  "generatedAt": "2026-10-06T12:00:00-07:00"
+}

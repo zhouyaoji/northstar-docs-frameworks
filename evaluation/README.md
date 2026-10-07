@@ -37,7 +37,9 @@ AIPP uses the same deterministic retrieval questions as the renderer exports and
 
 `protocol.md` defines the blinded, multi-model, and human-review procedure for comparing ordinary documentation with AIPP. The initial gold-standard suite is `benchmarks/answer-quality.yaml`. Its expectations are condition-specific, so a documentation-only assistant can receive credit for appropriate abstention when a fact exists only in AIPP.
 
-The schemas in `schemas/` define benchmark suites, model responses, and deterministic, model, or human judgments. Validate the contract without calling any model:
+The schemas in `schemas/` define benchmark suites, model responses, and deterministic, model, or human judgments. Codex, Gemini, API adapters, and local models should all return response files that conform to `schemas/response.schema.json`. The provider-neutral example in `examples/response.example.json` can be copied as a template. Fields for token usage and latency are optional because file-reading assistants do not always expose them.
+
+Validate the contract and example response without calling any model:
 
 ```bash
 python tools/validate-evaluation.py

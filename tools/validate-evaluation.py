@@ -19,7 +19,7 @@ def load(path: Path) -> dict:
 
 def validate() -> list[str]:
     errors: list[str] = []
-    schema_paths = sorted((EVALUATION / "schemas").glob("*.schema.yaml"))
+    schema_paths = sorted((EVALUATION / "schemas").glob("*.schema.*"))
     schemas: dict[str, dict] = {}
     for path in schema_paths:
         schema = load(path)
@@ -37,6 +37,15 @@ def validate() -> list[str]:
         for error in sorted(validator.iter_errors(suite), key=lambda item: list(item.path)):
             location = ".".join(str(part) for part in error.path) or "<root>"
             errors.append(f"{suite_path.relative_to(ROOT)}: schema error at {location}: {error.message}")
+
+    response_schema = schemas.get("response.schema.json")
+    response_example_path = EVALUATION / "examples" / "response.example.json"
+    if response_schema:
+        response_example = load(response_example_path)
+        validator = Draft202012Validator(response_schema, format_checker=FormatChecker())
+        for error in sorted(validator.iter_errors(response_example), key=lambda item: list(item.path)):
+            location = ".".join(str(part) for part in error.path) or "<root>"
+            errors.append(f"{response_example_path.relative_to(ROOT)}: schema error at {location}: {error.message}")
 
     source_registry = load(ROOT / "aipp" / "sources.yaml")
     known_sources = {source["id"] for source in source_registry.get("sources", [])}
@@ -79,4 +88,3 @@ def main() -> int:
 
 if __name__ == "__main__":
     raise SystemExit(main())
-
