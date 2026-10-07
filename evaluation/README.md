@@ -32,3 +32,15 @@ Failed implemented criteria produce recommendations with impact, effort, feasibi
 ## AIPP comparison
 
 AIPP uses the same deterministic retrieval questions as the renderer exports and adds checks for its structured object, source provenance, reviewed sidecars, conflict signaling, and discovery/feed artifacts. Renderer-specific criteria do not apply to AIPP, while AIPP-specific criteria do not apply to renderers. A future model-assisted phase can evaluate grounded answers, citations, edge cases, and appropriate abstention while recording the model, prompt, and evidence.
+
+## Answer-quality evaluation contract
+
+`protocol.md` defines the blinded, multi-model, and human-review procedure for comparing ordinary documentation with AIPP. The initial gold-standard suite is `benchmarks/answer-quality.yaml`. Its expectations are condition-specific, so a documentation-only assistant can receive credit for appropriate abstention when a fact exists only in AIPP.
+
+The schemas in `schemas/` define benchmark suites, model responses, and deterministic, model, or human judgments. Validate the contract without calling any model:
+
+```bash
+python tools/validate-evaluation.py
+```
+
+This foundation deliberately does not generate packets or call APIs. Later phases can add blinded packet generation, deterministic grading, human review, and provider adapters without changing the reviewed evidence contract.

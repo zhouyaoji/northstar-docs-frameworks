@@ -1,0 +1,77 @@
+$schema: https://json-schema.org/draft/2020-12/schema
+$id: https://zhouyaoji.github.io/northstar-docs-frameworks/evaluation/schemas/benchmark-suite.schema.yaml
+title: Northstar answer-quality benchmark suite
+type: object
+additionalProperties: false
+required: [schemaVersion, suiteVersion, protocolVersion, name, cases]
+properties:
+  schemaVersion: {const: 1}
+  suiteVersion: {type: string, pattern: '^[0-9]+\.[0-9]+\.[0-9]+$'}
+  protocolVersion: {type: string, pattern: '^[0-9]+\.[0-9]+\.[0-9]+$'}
+  name: {type: string, minLength: 1}
+  description: {type: string, minLength: 1}
+  cases:
+    type: array
+    minItems: 1
+    items:
+      type: object
+      additionalProperties: false
+      required: [id, category, question, claims, prohibitedClaims, expectations, exampleAnswer]
+      properties:
+        id: {$ref: '#/$defs/slug'}
+        category:
+          enum: [shared-documentation, aipp-only, conflict, insufficient-evidence]
+        question: {type: string, minLength: 1}
+        claims:
+          type: array
+          items:
+            type: object
+            additionalProperties: false
+            required: [id, text, sourceIds]
+            properties:
+              id: {$ref: '#/$defs/slug'}
+              text: {type: string, minLength: 1}
+              sourceIds:
+                type: array
+                minItems: 1
+                uniqueItems: true
+                items: {$ref: '#/$defs/slug'}
+        prohibitedClaims:
+          type: array
+          uniqueItems: true
+          items:
+            type: object
+            additionalProperties: false
+            required: [id, text]
+            properties:
+              id: {$ref: '#/$defs/slug'}
+              text: {type: string, minLength: 1}
+        expectations:
+          type: object
+          additionalProperties: false
+          required: [documentation, aipp]
+          properties:
+            documentation: {$ref: '#/$defs/expectation'}
+            aipp: {$ref: '#/$defs/expectation'}
+        exampleAnswer: {type: string, minLength: 1}
+$defs:
+  slug:
+    type: string
+    pattern: '^[a-z0-9]+(?:-[a-z0-9]+)*$'
+  expectation:
+    type: object
+    additionalProperties: false
+    required: [behavior, requiredClaimIds, requiredSourceIds]
+    properties:
+      behavior:
+        enum: [answer, qualified-answer, identify-conflict, abstain]
+      requiredClaimIds:
+        type: array
+        uniqueItems: true
+        items: {$ref: '#/$defs/slug'}
+      requiredSourceIds:
+        type: array
+        uniqueItems: true
+        items: {$ref: '#/$defs/slug'}
+      rationale: {type: string, minLength: 1}
+

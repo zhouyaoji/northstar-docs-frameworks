@@ -1,0 +1,127 @@
+schemaVersion: 1
+suiteVersion: 1.0.0
+protocolVersion: 1.0.0
+name: Northstar AIPP answer-quality comparison
+description: Initial gold-standard cases for comparing published documentation with the compiled AIPP knowledge object.
+cases:
+  - id: platform-purpose
+    category: shared-documentation
+    question: What does the Northstar platform manage?
+    claims:
+      - id: manages-environment-definition
+        text: Northstar stores an environment definition containing infrastructure settings, a deployment profile, and access rules.
+        sourceIds: [northstar-human-docs]
+      - id: supports-reusable-profiles
+        text: A platform team can apply reusable profiles to development, staging, and production environments.
+        sourceIds: [northstar-human-docs]
+    prohibitedClaims:
+      - id: real-production-service
+        text: Northstar is a real production service.
+    expectations:
+      documentation:
+        behavior: answer
+        requiredClaimIds: [manages-environment-definition, supports-reusable-profiles]
+        requiredSourceIds: [northstar-human-docs]
+      aipp:
+        behavior: answer
+        requiredClaimIds: [manages-environment-definition, supports-reusable-profiles]
+        requiredSourceIds: [northstar-human-docs]
+    exampleAnswer: Northstar is a fictional platform that stores environment definitions and lets platform teams reuse deployment profiles across development, staging, and production environments.
+
+  - id: profile-upgrade-effect
+    category: aipp-only
+    question: If a new cluster-profile version is published, are existing environments updated automatically?
+    claims:
+      - id: environments-remain-pinned
+        text: Existing environments remain pinned to the profile version used during provisioning and are not updated automatically.
+        sourceIds: [northstar-engineering-notes]
+    prohibitedClaims:
+      - id: automatic-profile-upgrade
+        text: Existing environments automatically adopt the newly published profile version.
+    expectations:
+      documentation:
+        behavior: abstain
+        requiredClaimIds: []
+        requiredSourceIds: []
+        rationale: Published documentation describes profile versioning but does not define the effect on existing environments.
+      aipp:
+        behavior: answer
+        requiredClaimIds: [environments-remain-pinned]
+        requiredSourceIds: [northstar-engineering-notes]
+    exampleAnswer: No. Existing environments remain pinned to the cluster-profile version used when they were provisioned; publishing a new version does not update them automatically.
+
+  - id: lost-create-response
+    category: aipp-only
+    question: A client submitted an environment creation request but lost the response. Should it immediately submit the request again?
+    claims:
+      - id: query-before-retry
+        text: The client should query the project environment list for the requested name before submitting another create request.
+        sourceIds: [northstar-engineering-notes]
+      - id: no-idempotency-contract
+        text: No idempotency-key contract is documented.
+        sourceIds: [northstar-engineering-notes]
+    prohibitedClaims:
+      - id: retry-is-always-safe
+        text: Retrying immediately is guaranteed not to create a duplicate.
+    expectations:
+      documentation:
+        behavior: abstain
+        requiredClaimIds: []
+        requiredSourceIds: []
+        rationale: Published documentation does not specify duplicate recovery or an idempotency contract.
+      aipp:
+        behavior: qualified-answer
+        requiredClaimIds: [query-before-retry, no-idempotency-contract]
+        requiredSourceIds: [northstar-engineering-notes]
+    exampleAnswer: Do not immediately retry. First query the project environment list for the requested name because Northstar does not document an idempotency-key contract.
+
+  - id: create-api-contract-conflict
+    category: conflict
+    question: Which endpoint and success status should a client use to create an environment?
+    claims:
+      - id: tutorial-contract
+        text: The tutorial demonstrates an unscoped environments path with a 202 Accepted response.
+        sourceIds: [northstar-human-docs]
+      - id: openapi-contract
+        text: The OpenAPI contract defines a project-scoped path with a 201 Created response.
+        sourceIds: [northstar-openapi]
+      - id: conflict-needs-review
+        text: The discrepancy is unresolved and requires human review.
+        sourceIds: [northstar-human-docs, northstar-openapi, northstar-engineering-notes]
+    prohibitedClaims:
+      - id: conflict-is-resolved
+        text: The available sources establish one reconciled endpoint and status as authoritative.
+    expectations:
+      documentation:
+        behavior: qualified-answer
+        requiredClaimIds: [tutorial-contract]
+        requiredSourceIds: [northstar-human-docs]
+        rationale: The tutorial can be reported, but ordinary documentation does not expose the reviewed conflict record.
+      aipp:
+        behavior: identify-conflict
+        requiredClaimIds: [tutorial-contract, openapi-contract, conflict-needs-review]
+        requiredSourceIds: [northstar-human-docs, northstar-openapi, northstar-engineering-notes]
+    exampleAnswer: The sources disagree. The tutorial uses the unscoped environments path and 202 Accepted, while the OpenAPI contract specifies a project-scoped path and 201 Created. Treat this as unresolved and ask the responsible subject-matter expert to confirm the contract.
+
+  - id: unsupported-region
+    category: insufficient-evidence
+    question: Does Northstar support production environments in Azure West Europe?
+    claims: []
+    prohibitedClaims:
+      - id: west-europe-supported
+        text: Azure West Europe is supported for production environments.
+      - id: west-europe-unsupported
+        text: Azure West Europe is not supported for production environments.
+    expectations:
+      documentation:
+        behavior: abstain
+        requiredClaimIds: []
+        requiredSourceIds: []
+        rationale: The published documentation provides no region-support matrix.
+      aipp:
+        behavior: abstain
+        requiredClaimIds: []
+        requiredSourceIds: []
+        rationale: The AIPP object also provides no evidence establishing region support.
+    exampleAnswer: The available Northstar sources do not establish whether Azure West Europe is supported for production environments. Check the current provider-region compatibility source or ask the platform team.
+

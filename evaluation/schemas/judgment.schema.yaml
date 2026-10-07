@@ -1,0 +1,44 @@
+$schema: https://json-schema.org/draft/2020-12/schema
+$id: https://zhouyaoji.github.io/northstar-docs-frameworks/evaluation/schemas/judgment.schema.yaml
+title: Northstar answer-quality judgment
+type: object
+additionalProperties: false
+required: [schemaVersion, runId, responseId, evaluator, rubricVersion, scores, decision, evaluatedAt]
+properties:
+  schemaVersion: {const: 1}
+  runId: {type: string, minLength: 1}
+  responseId: {type: string, minLength: 1}
+  evaluator:
+    type: object
+    additionalProperties: false
+    required: [type, identity]
+    properties:
+      type: {enum: [deterministic, model, human]}
+      identity: {type: string, minLength: 1}
+      provider: {type: string, minLength: 1}
+      model: {type: string, minLength: 1}
+      promptVersion: {type: string, minLength: 1}
+  rubricVersion: {type: string, minLength: 1}
+  scores:
+    type: object
+    additionalProperties: false
+    required: [accuracy, completeness, attribution, edgeCaseHandling, conflictHandling, uncertainty]
+    properties:
+      accuracy: {$ref: '#/$defs/score'}
+      completeness: {$ref: '#/$defs/score'}
+      attribution: {$ref: '#/$defs/score'}
+      edgeCaseHandling: {$ref: '#/$defs/score'}
+      conflictHandling: {$ref: '#/$defs/score'}
+      uncertainty: {$ref: '#/$defs/score'}
+  decision: {enum: [pass, needs-review, fail]}
+  notes: {type: string}
+  evidence:
+    type: array
+    items: {type: string, minLength: 1}
+  evaluatedAt: {type: string, format: date-time}
+$defs:
+  score:
+    oneOf:
+      - {type: integer, minimum: 0, maximum: 4}
+      - {const: not_applicable}
+
