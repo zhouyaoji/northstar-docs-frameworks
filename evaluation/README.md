@@ -46,3 +46,22 @@ python tools/validate-evaluation.py
 ```
 
 This foundation deliberately does not generate packets or call APIs. Later phases can add blinded packet generation, deterministic grading, human review, and provider adapters without changing the reviewed evidence contract.
+
+## Generate blinded packets
+
+Build the documentation sites first so the published `llms-full.txt` and compiled AIPP object are current. Then generate a run with an explicit ID and randomization seed:
+
+```bash
+./tools/build-sites.sh
+python tools/generate-evaluation-packets.py \
+  --run-id pilot-001 \
+  --seed 20261012 \
+  --output evaluation/runs/pilot-001
+```
+
+The generator creates two deliberately separated areas:
+
+- `share/` contains randomized `source-a` and `source-b` packets, a manifest, response templates, and instructions. Give only this directory to Codex, Gemini, or another answer generator.
+- `private/condition-map.json` records which label represents documentation or AIPP, the seed, source paths, and checksums. Keep it away from answer generators and blinded evaluators until judging is complete.
+
+Every packet is validated against `schemas/packet.schema.json`; its embedded response template is validated against `schemas/response.schema.json`. The generated run directory is ignored by Git so incomplete responses and the private condition map are not committed accidentally. A later stage will import completed response JSON files and preserve the finalized run as an evaluation artifact.
