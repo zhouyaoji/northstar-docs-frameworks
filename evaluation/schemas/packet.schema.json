@@ -1,0 +1,48 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://zhouyaoji.github.io/northstar-docs-frameworks/evaluation/schemas/packet.schema.json",
+  "title": "Blinded Northstar evaluation packet",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "schemaVersion",
+    "runId",
+    "suiteVersion",
+    "protocolVersion",
+    "caseId",
+    "question",
+    "blindedCondition",
+    "instructions",
+    "source",
+    "responseTemplate"
+  ],
+  "properties": {
+    "schemaVersion": {"const": 1},
+    "runId": {"type": "string", "pattern": "^[a-z0-9]+(?:-[a-z0-9]+)*$"},
+    "suiteVersion": {"type": "string", "pattern": "^[0-9]+\\.[0-9]+\\.[0-9]+$"},
+    "protocolVersion": {"type": "string", "pattern": "^[0-9]+\\.[0-9]+\\.[0-9]+$"},
+    "caseId": {"type": "string", "pattern": "^[a-z0-9]+(?:-[a-z0-9]+)*$"},
+    "question": {"type": "string", "minLength": 1},
+    "blindedCondition": {"type": "string", "pattern": "^source-[a-z]+$"},
+    "instructions": {
+      "type": "array",
+      "minItems": 1,
+      "items": {"type": "string", "minLength": 1}
+    },
+    "source": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["sha256", "citationIds", "content"],
+      "properties": {
+        "sha256": {"type": "string", "pattern": "^[a-f0-9]{64}$"},
+        "citationIds": {
+          "type": "array",
+          "uniqueItems": true,
+          "items": {"type": "string", "minLength": 1}
+        },
+        "content": {"type": "string", "minLength": 1}
+      }
+    },
+    "responseTemplate": {"$ref": "response.schema.json"}
+  }
+}

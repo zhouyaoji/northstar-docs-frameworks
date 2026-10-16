@@ -50,6 +50,13 @@ jobs:
         run: python tools/validate-evaluation.py
       - name: Build all sites
         run: ./tools/build-sites.sh
+      - name: Smoke-test blinded evaluation packet generation
+        run: |
+          python tools/generate-evaluation-packets.py \
+            --run-id ci-smoke \
+            --seed 20261012 \
+            --created-at 2026-10-12T00:00:00Z \
+            --output /tmp/northstar-evaluation-ci
       - name: Check generated links and assets
         run: python tools/check-built-links.py
       - name: Preserve scorecard baseline artifact

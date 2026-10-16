@@ -31,6 +31,8 @@ Gold records must be written before model answers are generated. Changes after a
 
 Packet generation will replace condition names with opaque labels such as `source-a` and `source-b`. Label assignment and presentation order must be randomized per run and stored separately from judge-facing files.
 
+The generator writes shareable packets and the condition map to separate directories. Only the shareable directory is provided to answer generators. Source formats are preserved rather than normalized, so structural differences may still allow a model to infer the condition; reports must disclose this limitation.
+
 Model judges and human reviewers receive the question, answer, permitted evidence, and rubric, but not the condition name or generator identity. A person or model that writes an answer must not be its only evaluator.
 
 ## Evaluation layers
