@@ -37,7 +37,7 @@ Model judges and human reviewers receive the question, answer, permitted evidenc
 
 ## Evaluation layers
 
-1. **Deterministic checks** test required claim IDs, citations, prohibited claims, and output structure where those checks are mechanically reliable.
+1. **Deterministic checks** validate response structure, packet metadata, response completeness, and citation identifiers. They do not infer whether natural-language text expresses required claims or prohibited claims; those semantic checks remain for model and human reviewers.
 2. **Model judgments** use at least two judge models when resources allow. Prefer judges from different providers and disclose their exact model identifiers and prompts.
 3. **Human review** scores the same dimensions and records a role rather than personal data. Human results remain visible separately from automated and model-assisted results.
 
@@ -74,3 +74,9 @@ Never commit API keys, access tokens, personal reviewer information, or hidden c
 ## Response format
 
 Every generator returns one JSON object per case and blinded condition using `schemas/response.schema.json`. The same contract applies to API output and answers copied from a subscription-based file-reading assistant. Assistants return only their answer and citations; they do not receive gold claims, example answers, condition mappings, or completed judgments.
+
+## Import boundary
+
+The response importer may read the private condition map after generation is complete so it can apply condition-specific citation expectations. It must not copy the mapping into the shareable import report or deterministic judgments. Imported responses are preserved byte for byte and recorded with SHA-256 checksums.
+
+A deterministic `pass` means only that the mechanically verifiable checks passed. It is not an overall quality judgment. Invalid or missing responses remain visible in the import report, and semantic dimensions stay `not_applicable` until a blinded model or human review is recorded.

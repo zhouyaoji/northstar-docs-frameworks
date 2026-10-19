@@ -45,7 +45,7 @@ Validate the contract and example response without calling any model:
 python tools/validate-evaluation.py
 ```
 
-This foundation deliberately does not generate packets or call APIs. Later phases can add blinded packet generation, deterministic grading, human review, and provider adapters without changing the reviewed evidence contract.
+The evaluation tools are local and deterministic. They do not call model APIs. Human review and optional model judging remain separate later phases.
 
 ## Generate blinded packets
 
@@ -65,3 +65,32 @@ The generator creates two deliberately separated areas:
 - `private/condition-map.json` records which label represents documentation or AIPP, the seed, source paths, and checksums. Keep it away from answer generators and blinded evaluators until judging is complete.
 
 Every packet is validated against `schemas/packet.schema.json`; its embedded response template is validated against `schemas/response.schema.json`. The generated run directory is ignored by Git so incomplete responses and the private condition map are not committed accidentally. A later stage will import completed response JSON files and preserve the finalized run as an evaluation artifact.
+
+## Import and check responses
+
+Place completed JSON responses in the run's `responses/` directory. Files can be nested by provider or model. Import them only after every answer generator has received the blinded `share/` directory:
+
+```bash
+python tools/import-evaluation-responses.py \
+  --run evaluation/runs/pilot-001
+```
+
+The importer writes a new `results/` directory containing:
+
+- byte-for-byte copies of valid responses, named by response ID;
+- one deterministic judgment per imported response;
+- `import-report.json`, with generator-level completeness, missing packets, invalid files, checksums, and deterministic decisions.
+
+The import fails for malformed JSON, schema violations, mismatched run metadata, unknown packets, duplicate response IDs, or duplicate answers from the same generator. Missing responses are preserved in the report rather than silently discarded.
+
+Deterministic judgments check only what software can establish reliably: response structure, packet identity, allowed citation IDs, and required citation IDs. They deliberately mark accuracy, completeness, edge-case handling, conflict handling, and uncertainty as `not_applicable`. A deterministic pass is therefore not a claim that the answer text is correct; those dimensions remain for blinded model and human review.
+
+For reproducible imports, supply an explicit timestamp:
+
+```bash
+python tools/import-evaluation-responses.py \
+  --run evaluation/runs/pilot-001 \
+  --evaluated-at 2026-10-19T00:00:00Z
+```
+
+The CI smoke test generates synthetic responses locally and verifies complete imports plus deterministic failure for a citation that was not present in its packet. It does not contact Codex, Gemini, or any paid service.
