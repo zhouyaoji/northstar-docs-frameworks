@@ -1,0 +1,59 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://zhouyaoji.github.io/northstar-docs-frameworks/evaluation/schemas/human-review-packet.schema.json",
+  "title": "Blinded Northstar human-review packet",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["schemaVersion", "runId", "reviewId", "question", "answer", "citations", "source", "gold", "rubric", "instructions", "judgmentTemplate"],
+  "properties": {
+    "schemaVersion": {"const": 1},
+    "runId": {"type": "string", "minLength": 1},
+    "reviewId": {"type": "string", "pattern": "^review-[0-9]{3}$"},
+    "question": {"type": "string", "minLength": 1},
+    "answer": {"type": "string"},
+    "citations": {"type": "array", "uniqueItems": true, "items": {"type": "string", "minLength": 1}},
+    "source": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["citationIds", "content"],
+      "properties": {
+        "citationIds": {"type": "array", "uniqueItems": true, "items": {"type": "string", "minLength": 1}},
+        "content": {"type": "string", "minLength": 1}
+      }
+    },
+    "gold": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["expectedBehavior", "requiredClaims", "prohibitedClaims"],
+      "properties": {
+        "expectedBehavior": {"enum": ["answer", "qualified-answer", "identify-conflict", "abstain"]},
+        "rationale": {"type": "string"},
+        "requiredClaims": {"type": "array", "items": {"$ref": "#/$defs/claim"}},
+        "prohibitedClaims": {"type": "array", "items": {"$ref": "#/$defs/claim"}}
+      }
+    },
+    "rubric": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["version", "scale", "dimensions"],
+      "properties": {
+        "version": {"type": "string", "minLength": 1},
+        "scale": {"type": "object"},
+        "dimensions": {"type": "object"}
+      }
+    },
+    "instructions": {"type": "array", "minItems": 1, "items": {"type": "string", "minLength": 1}},
+    "judgmentTemplate": {"type": "object"}
+  },
+  "$defs": {
+    "claim": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["id", "text"],
+      "properties": {
+        "id": {"type": "string", "minLength": 1},
+        "text": {"type": "string", "minLength": 1}
+      }
+    }
+  }
+}

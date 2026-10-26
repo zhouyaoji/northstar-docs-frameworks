@@ -1,0 +1,30 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://zhouyaoji.github.io/northstar-docs-frameworks/evaluation/schemas/comparison-report.schema.json",
+  "title": "Northstar evaluation comparison report",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["schemaVersion", "runId", "suiteVersion", "protocolVersion", "generatedAt", "coverage", "limitations", "aggregates", "pairedComparisons", "individualResults"],
+  "properties": {
+    "schemaVersion": {"const": 1},
+    "runId": {"type": "string", "minLength": 1},
+    "suiteVersion": {"type": "string", "minLength": 1},
+    "protocolVersion": {"type": "string", "minLength": 1},
+    "generatedAt": {"type": "string", "format": "date-time"},
+    "coverage": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["responses", "humanJudgments", "responsesWithHumanReview", "missingHumanReview"],
+      "properties": {
+        "responses": {"type": "integer", "minimum": 0},
+        "humanJudgments": {"type": "integer", "minimum": 0},
+        "responsesWithHumanReview": {"type": "integer", "minimum": 0},
+        "missingHumanReview": {"type": "array", "items": {"type": "string", "minLength": 1}}
+      }
+    },
+    "limitations": {"type": "array", "items": {"type": "string", "minLength": 1}},
+    "aggregates": {"type": "array", "items": {"type": "object"}},
+    "pairedComparisons": {"type": "array", "items": {"type": "object"}},
+    "individualResults": {"type": "array", "items": {"type": "object"}}
+  }
+}

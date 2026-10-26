@@ -80,3 +80,11 @@ Every generator returns one JSON object per case and blinded condition using `sc
 The response importer may read the private condition map after generation is complete so it can apply condition-specific citation expectations. It must not copy the mapping into the shareable import report or deterministic judgments. Imported responses are preserved byte for byte and recorded with SHA-256 checksums.
 
 A deterministic `pass` means only that the mechanically verifiable checks passed. It is not an overall quality judgment. Invalid or missing responses remain visible in the import report, and semantic dimensions stay `not_applicable` until a blinded model or human review is recorded.
+
+## Human-review boundary
+
+Human-review preparation assigns a new opaque review ID to each imported response and randomizes presentation order. Reviewers receive the question, answer, supplied source, applicable gold requirements, scoring rubric, and judgment template. They do not receive the answer generator, source-condition name, original response ID, or private review map.
+
+Reviewers identify themselves by role rather than personal name. Each score requires concise notes and evidence that can be audited. Multiple reviews of the same response remain separate so disagreement is visible; the report does not overwrite one judgment with another.
+
+Only after reviews are complete does report generation use the private maps to restore generator and condition names. The comparison report keeps deterministic and human results separate, reports missing reviews, shows individual cases, and treats paired differences as descriptive rather than statistically significant.

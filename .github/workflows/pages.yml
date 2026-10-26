@@ -58,7 +58,15 @@ jobs:
             --created-at 2026-10-12T00:00:00Z \
             --output /tmp/northstar-evaluation-ci
       - name: Smoke-test response import and deterministic grading
-        run: python tools/smoke-test-evaluation-import.py --run /tmp/northstar-evaluation-ci
+        run: |
+          python tools/smoke-test-evaluation-import.py \
+            --run /tmp/northstar-evaluation-ci \
+            --workspace /tmp/northstar-response-import-ci
+      - name: Smoke-test human review and comparison reporting
+        run: |
+          python tools/smoke-test-human-review.py \
+            --run /tmp/northstar-evaluation-ci \
+            --results /tmp/northstar-response-import-ci/valid-results
       - name: Check generated links and assets
         run: python tools/check-built-links.py
       - name: Preserve scorecard baseline artifact
