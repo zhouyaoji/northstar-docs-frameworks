@@ -72,35 +72,46 @@ def run_import(run: Path, responses: Path, output: Path) -> dict:
     return load_json(output / "import-report.json")
 
 
+def smoke(run: Path, root: Path) -> None:
+    valid_responses = root / "valid-responses"
+    valid_results = root / "valid-results"
+    build_responses(run, valid_responses)
+    valid_report = run_import(run, valid_responses, valid_results)
+    expected = valid_report["counts"]["expectedPackets"]
+    if valid_report["counts"] != {
+        "expectedPackets": expected,
+        "responseFiles": expected,
+        "imported": expected,
+        "invalid": 0,
+        "missing": 0,
+    }:
+        raise RuntimeError(f"unexpected valid import counts: {valid_report['counts']}")
+    if any(item["deterministicDecision"] != "pass" for item in valid_report["responses"]):
+        raise RuntimeError("valid fixture did not pass deterministic checks")
+
+    bad_responses = root / "bad-citation-responses"
+    bad_results = root / "bad-citation-results"
+    build_responses(run, bad_responses, add_bad_citation=True)
+    bad_report = run_import(run, bad_responses, bad_results)
+    if sum(item["deterministicDecision"] == "fail" for item in bad_report["responses"]) != 1:
+        raise RuntimeError("disallowed citation was not graded as a deterministic failure")
+
+
 def main() -> int:
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("--run", required=True, type=Path)
+    parser.add_argument("--workspace", type=Path, help="Optional empty directory for retained smoke artifacts")
     args = parser.parse_args()
     run = args.run.resolve()
-    with tempfile.TemporaryDirectory(prefix="northstar-import-smoke-") as temp:
-        root = Path(temp)
-        valid_responses = root / "valid-responses"
-        valid_results = root / "valid-results"
-        build_responses(run, valid_responses)
-        valid_report = run_import(run, valid_responses, valid_results)
-        expected = valid_report["counts"]["expectedPackets"]
-        if valid_report["counts"] != {
-            "expectedPackets": expected,
-            "responseFiles": expected,
-            "imported": expected,
-            "invalid": 0,
-            "missing": 0,
-        }:
-            raise RuntimeError(f"unexpected valid import counts: {valid_report['counts']}")
-        if any(item["deterministicDecision"] != "pass" for item in valid_report["responses"]):
-            raise RuntimeError("valid fixture did not pass deterministic checks")
-
-        bad_responses = root / "bad-citation-responses"
-        bad_results = root / "bad-citation-results"
-        build_responses(run, bad_responses, add_bad_citation=True)
-        bad_report = run_import(run, bad_responses, bad_results)
-        if sum(item["deterministicDecision"] == "fail" for item in bad_report["responses"]) != 1:
-            raise RuntimeError("disallowed citation was not graded as a deterministic failure")
+    if args.workspace:
+        root = args.workspace.resolve()
+        if root.exists() and any(root.iterdir()):
+            raise RuntimeError(f"workspace is not empty: {root}")
+        root.mkdir(parents=True, exist_ok=True)
+        smoke(run, root)
+    else:
+        with tempfile.TemporaryDirectory(prefix="northstar-import-smoke-") as temp:
+            smoke(run, Path(temp))
     print("Validated response import, completeness accounting, and deterministic citation grading.")
     return 0
 

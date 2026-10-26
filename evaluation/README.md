@@ -64,7 +64,7 @@ The generator creates two deliberately separated areas:
 - `share/` contains randomized `source-a` and `source-b` packets, a manifest, response templates, and instructions. Give only this directory to Codex, Gemini, or another answer generator.
 - `private/condition-map.json` records which label represents documentation or AIPP, the seed, source paths, and checksums. Keep it away from answer generators and blinded evaluators until judging is complete.
 
-Every packet is validated against `schemas/packet.schema.json`; its embedded response template is validated against `schemas/response.schema.json`. The generated run directory is ignored by Git so incomplete responses and the private condition map are not committed accidentally. A later stage will import completed response JSON files and preserve the finalized run as an evaluation artifact.
+Every packet is validated against `schemas/packet.schema.json`; its embedded response template is validated against `schemas/response.schema.json`. The generated run directory is ignored by Git so incomplete responses and the private condition map are not committed accidentally. The response importer preserves completed response JSON files as evaluation artifacts.
 
 ## Import and check responses
 
@@ -94,3 +94,36 @@ python tools/import-evaluation-responses.py \
 ```
 
 The CI smoke test generates synthetic responses locally and verifies complete imports plus deterministic failure for a citation that was not present in its packet. It does not contact Codex, Gemini, or any paid service.
+
+## Conduct blinded human review
+
+After importing responses, create randomized review packets with a different seed from the answer-packet run:
+
+```bash
+python tools/prepare-human-review.py \
+  --run evaluation/runs/pilot-001 \
+  --seed 20261026
+```
+
+Give reviewers only `human-review/share/`. Each packet includes the question, answer, supplied source, condition-specific gold requirements, scoring anchors, and a judgment template. It excludes the answer generator, source-condition name, and original response ID. Keep `human-review/private/review-map.json` private until every review is returned.
+
+Reviewers save completed judgment JSON files in `human-review/judgments/`. They identify themselves by role, such as `documentation-reviewer`, rather than by personal name. More than one reviewer can evaluate the same blinded response as long as their role identifiers differ.
+
+## Generate the comparison report
+
+After collecting human judgments, unblind and aggregate the results:
+
+```bash
+python tools/generate-evaluation-comparison.py \
+  --run evaluation/runs/pilot-001
+```
+
+The command writes machine-readable JSON and a Markdown report to `comparison/`. The report includes:
+
+- review coverage and missing human judgments;
+- separate deterministic and human aggregates by generator, source condition, and case category;
+- descriptive paired AIPP-versus-documentation differences for each generator and case;
+- individual results and reviewer disagreement;
+- explicit limitations, including the small initial suite and potentially recognizable source formats.
+
+The report never claims statistical significance. Averages exclude `not_applicable` dimensions, and deterministic scores remain separate from human scores. CI exercises the full workflow with synthetic responses and judgments but does not call any AI provider.
