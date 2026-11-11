@@ -127,3 +127,9 @@ The command writes machine-readable JSON and a Markdown report to `comparison/`.
 - explicit limitations, including the small initial suite and potentially recognizable source formats.
 
 The report never claims statistical significance. Averages exclude `not_applicable` dimensions, and deterministic scores remain separate from human scores. CI exercises the full workflow with synthetic responses and judgments but does not call any AI provider.
+
+## Run the manual Codex and Gemini pilot
+
+`manual-pilot.md` provides the end-to-end procedure for collecting blinded answers from Codex and Gemini through their file-reading interfaces without calling a paid API. It defines session isolation, the shared prompt, response storage, completeness checks, import, human review, reporting, and a completion checklist.
+
+The pilot instructions keep the private condition and review maps away from answer generators and reviewers. They also require exact displayed model labels, preserve missing or invalid responses, and distinguish permitted mechanical JSON repairs from changes to answer content.
