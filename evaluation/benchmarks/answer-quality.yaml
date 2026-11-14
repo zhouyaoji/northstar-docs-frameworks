@@ -1,6 +1,6 @@
 schemaVersion: 1
 suiteVersion: 1.0.0
-protocolVersion: 1.0.0
+protocolVersion: 1.1.0
 name: Northstar AIPP answer-quality comparison
 description: Initial gold-standard cases for comparing published documentation with the compiled AIPP knowledge object.
 cases:

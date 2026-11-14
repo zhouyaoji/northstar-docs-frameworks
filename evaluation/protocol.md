@@ -1,6 +1,6 @@
 # AIPP answer-quality evaluation protocol
 
-Protocol version: **1.0.0**
+Protocol version: **1.1.0**
 
 This protocol compares answers grounded in published Northstar documentation with answers grounded in the compiled AIPP knowledge object. It tests whether AIPP changes answer quality; it does not assume that AIPP is better.
 
@@ -49,7 +49,12 @@ Scores use a 0–4 scale:
 - `3`: correct with minor omissions
 - `4`: fully supported and useful
 
-The dimensions are factual accuracy, completeness, source attribution, edge-case handling, conflict handling, and appropriate uncertainty. `not_applicable` dimensions are excluded rather than treated as zero.
+Human review keeps two questions separate:
+
+1. **Response completeness and helpfulness** asks whether the response gives the user a correct, complete, useful answer against the common verified requirements. Its dimensions are accuracy, completeness, helpfulness, edge-case handling, and conflict handling.
+2. **Source handling** asks whether the response uses its assigned source effectively and accurately. Its dimensions are groundedness, coverage of relevant available information, citation accuracy, and appropriate uncertainty.
+
+The two score groups are reported separately and are never combined into one overall score. This makes it possible to distinguish a limited source from a model that failed to use the information it received. `not_applicable` dimensions are excluded rather than treated as zero.
 
 ## Multi-model comparison
 
@@ -83,7 +88,7 @@ A deterministic `pass` means only that the mechanically verifiable checks passed
 
 ## Human-review boundary
 
-Human-review preparation assigns a new opaque review ID to each imported response and randomizes presentation order. Reviewers receive the question, answer, supplied source, applicable gold requirements, scoring rubric, and judgment template. They do not receive the answer generator, source-condition name, original response ID, or private review map.
+Human-review preparation assigns a new opaque review ID to each imported response and randomizes presentation order. Reviewers receive the question, answer, supplied source, common verified answer requirements, source-specific expectations, scoring rubric, and judgment template. They do not receive the answer generator, source-condition name, original response ID, or private review map.
 
 Reviewers identify themselves by role rather than personal name. Each score requires concise notes and evidence that can be audited. Multiple reviews of the same response remain separate so disagreement is visible; the report does not overwrite one judgment with another.
 

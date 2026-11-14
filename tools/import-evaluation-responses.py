@@ -139,20 +139,30 @@ def deterministic_judgment(
         decision = "pass"
 
     return {
-        "schemaVersion": 1,
+        "schemaVersion": 2,
         "runId": response["runId"],
         "responseId": response["responseId"],
         "evaluator": {"type": "deterministic", "identity": "northstar-import-checks-v1"},
-        "rubricVersion": "answer-quality-1.0.0",
+        "rubricVersion": "answer-quality-1.1.0",
         "scores": {
-            "accuracy": "not_applicable",
-            "completeness": "not_applicable",
-            "attribution": attribution_score,
-            "edgeCaseHandling": "not_applicable",
-            "conflictHandling": "not_applicable",
-            "uncertainty": "not_applicable",
+            "responseCompletenessHelpfulness": {
+                "accuracy": "not_applicable",
+                "completeness": "not_applicable",
+                "helpfulness": "not_applicable",
+                "edgeCaseHandling": "not_applicable",
+                "conflictHandling": "not_applicable",
+            },
+            "sourceHandling": {
+                "groundedness": "not_applicable",
+                "sourceCoverage": "not_applicable",
+                "citationAccuracy": attribution_score,
+                "uncertainty": "not_applicable",
+            },
         },
-        "decision": decision,
+        "decisions": {
+            "responseCompletenessHelpfulness": "not_applicable",
+            "sourceHandling": decision,
+        },
         "notes": (
             "Deterministic checks cover structure, packet metadata, and citation identifiers only. "
             "They do not establish that the answer text expresses the required claims, avoids prohibited "
@@ -238,7 +248,7 @@ def import_responses(run: Path, responses_dir: Path, output: Path, evaluated_at:
                 "caseId": response["caseId"],
                 "blindedCondition": response["blindedCondition"],
                 "sha256": sha256(path),
-                "deterministicDecision": judgment["decision"],
+                "deterministicDecision": judgment["decisions"]["sourceHandling"],
             }
         )
 

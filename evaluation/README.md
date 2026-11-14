@@ -105,7 +105,9 @@ python tools/prepare-human-review.py \
   --seed 20261026
 ```
 
-Give reviewers only `human-review/share/`. Each packet includes the question, answer, supplied source, condition-specific gold requirements, scoring anchors, and a judgment template. It excludes the answer generator, source-condition name, and original response ID. Keep `human-review/private/review-map.json` private until every review is returned.
+Give reviewers only `human-review/share/`. Each packet includes the question, answer, supplied source, common verified answer requirements, source-specific expectations, scoring anchors, and a judgment template. It excludes the answer generator, source-condition name, and original response ID. Keep `human-review/private/review-map.json` private until every review is returned.
+
+The reviewer records two separate groups of scores. **Response completeness and helpfulness** measures whether the user receives a correct, complete, useful answer against the same common requirements in both source conditions. **Source handling** measures whether the response uses the particular source it received effectively and accurately. The report does not combine these groups into one score.
 
 Reviewers save completed judgment JSON files in `human-review/judgments/`. They identify themselves by role, such as `documentation-reviewer`, rather than by personal name. More than one reviewer can evaluate the same blinded response as long as their role identifiers differ.
 
@@ -121,8 +123,8 @@ python tools/generate-evaluation-comparison.py \
 The command writes machine-readable JSON and a Markdown report to `comparison/`. The report includes:
 
 - review coverage and missing human judgments;
-- separate deterministic and human aggregates by generator, source condition, and case category;
-- descriptive paired AIPP-versus-documentation differences for each generator and case;
+- separate deterministic and human aggregates for response completeness and helpfulness versus source handling, grouped by generator, source condition, and case category;
+- descriptive paired AIPP-versus-documentation differences for both score groups, by generator and case;
 - individual results and reviewer disagreement;
 - explicit limitations, including the small initial suite and potentially recognizable source formats.
 

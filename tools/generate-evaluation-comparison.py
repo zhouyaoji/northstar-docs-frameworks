@@ -19,7 +19,12 @@ EVALUATION = ROOT / "evaluation"
 SUITE_PATH = EVALUATION / "benchmarks" / "answer-quality.yaml"
 JUDGMENT_SCHEMA_PATH = EVALUATION / "schemas" / "judgment.schema.yaml"
 REPORT_SCHEMA_PATH = EVALUATION / "schemas" / "comparison-report.schema.json"
-DIMENSIONS = ["accuracy", "completeness", "attribution", "edgeCaseHandling", "conflictHandling", "uncertainty"]
+DIMENSION_GROUPS = {
+    "responseCompletenessHelpfulness": [
+        "accuracy", "completeness", "helpfulness", "edgeCaseHandling", "conflictHandling",
+    ],
+    "sourceHandling": ["groundedness", "sourceCoverage", "citationAccuracy", "uncertainty"],
+}
 
 
 def load_json(path: Path) -> dict:
@@ -56,8 +61,10 @@ def mean_or_none(values: list[int]) -> float | None:
     return round(statistics.mean(values), 3) if values else None
 
 
-def judgment_score(judgment: dict) -> float | None:
-    values = [value for value in judgment["scores"].values() if isinstance(value, int)]
+def judgment_score(judgment: dict, group: str) -> float | None:
+    values = [
+        value for value in judgment["scores"][group].values() if isinstance(value, int)
+    ]
     return mean_or_none(values)
 
 
@@ -67,18 +74,26 @@ def aggregate(records: list[dict]) -> list[dict]:
         groups[(record["evaluatorType"], record["generatorId"], record["condition"], record["category"])].append(record)
     output = []
     for (evaluator_type, generator_id, condition, category), items in sorted(groups.items()):
-        dimension_values = {
-            dimension: [
-                judgment["scores"][dimension]
+        group_values = {
+            group: {
+                dimension: [
+                    judgment["scores"][group][dimension]
+                    for item in items
+                    for judgment in item["judgments"]
+                    if isinstance(judgment["scores"][group][dimension], int)
+                ]
+                for dimension in dimensions
+            }
+            for group, dimensions in DIMENSION_GROUPS.items()
+        }
+        decisions = {
+            group: Counter(
+                judgment["decisions"][group]
                 for item in items
                 for judgment in item["judgments"]
-                if isinstance(judgment["scores"][dimension], int)
-            ]
-            for dimension in DIMENSIONS
+            )
+            for group in DIMENSION_GROUPS
         }
-        decisions = Counter(
-            judgment["decision"] for item in items for judgment in item["judgments"]
-        )
         output.append(
             {
                 "evaluatorType": evaluator_type,
@@ -87,35 +102,56 @@ def aggregate(records: list[dict]) -> list[dict]:
                 "category": category,
                 "responseCount": len({item["responseId"] for item in items}),
                 "judgmentCount": sum(len(item["judgments"]) for item in items),
-                "dimensionAverages": {
-                    dimension: mean_or_none(values) for dimension, values in dimension_values.items()
+                "scoreGroupAverages": {
+                    group: {
+                        dimension: mean_or_none(values)
+                        for dimension, values in dimensions.items()
+                    }
+                    for group, dimensions in group_values.items()
                 },
-                "decisionCounts": {name: decisions.get(name, 0) for name in ("pass", "needs-review", "fail")},
+                "decisionCounts": {
+                    group: {
+                        name: decisions[group].get(name, 0)
+                        for name in ("pass", "needs-review", "fail", "not_applicable")
+                    }
+                    for group in DIMENSION_GROUPS
+                },
             }
         )
     return output
 
 
 def paired_comparisons(individual: list[dict]) -> list[dict]:
-    by_pair: dict[tuple[str, str], dict[str, list[float]]] = defaultdict(lambda: defaultdict(list))
+    by_pair: dict[tuple[str, str], dict[str, dict[str, list[float]]]] = defaultdict(
+        lambda: defaultdict(lambda: defaultdict(list))
+    )
     for item in individual:
         for judgment in item["humanJudgments"]:
-            score = judgment_score(judgment)
-            if score is not None:
-                by_pair[(item["generatorId"], item["caseId"])][item["condition"]].append(score)
+            for group in DIMENSION_GROUPS:
+                score = judgment_score(judgment, group)
+                if score is not None:
+                    by_pair[(item["generatorId"], item["caseId"])][group][item["condition"]].append(score)
     output = []
-    for (generator_id, case_id), conditions in sorted(by_pair.items()):
-        if not conditions.get("documentation") or not conditions.get("aipp"):
+    for (generator_id, case_id), groups in sorted(by_pair.items()):
+        if any(
+            not groups[group].get("documentation") or not groups[group].get("aipp")
+            for group in DIMENSION_GROUPS
+        ):
             continue
-        documentation = round(statistics.mean(conditions["documentation"]), 3)
-        aipp = round(statistics.mean(conditions["aipp"]), 3)
+        comparisons = {}
+        for group in DIMENSION_GROUPS:
+            documentation = round(statistics.mean(groups[group]["documentation"]), 3)
+            aipp = round(statistics.mean(groups[group]["aipp"]), 3)
+            comparisons[group] = {
+                "documentationScore": documentation,
+                "aippScore": aipp,
+                "difference": round(aipp - documentation, 3),
+            }
         output.append(
             {
                 "generatorId": generator_id,
                 "caseId": case_id,
-                "documentationScore": documentation,
-                "aippScore": aipp,
-                "difference": round(aipp - documentation, 3),
+                "scoreGroups": comparisons,
                 "note": "Descriptive paired difference only; do not interpret as statistical significance.",
             }
         )
@@ -137,13 +173,13 @@ def markdown(report: dict) -> str:
         f"- Responses with human review: {coverage['responsesWithHumanReview']}",
         f"- Responses missing human review: {len(coverage['missingHumanReview'])}",
         "",
-        "## Aggregate results",
+        "## Response completeness and helpfulness",
         "",
-        "| Evaluator | Generator | Condition | Category | Responses | Judgments | Accuracy | Completeness | Attribution | Edge cases | Conflicts | Uncertainty |",
-        "|---|---|---|---|---:|---:|---:|---:|---:|---:|---:|---:|",
+        "| Evaluator | Generator | Condition | Category | Responses | Judgments | Accuracy | Completeness | Helpfulness | Edge cases | Conflicts |",
+        "|---|---|---|---|---:|---:|---:|---:|---:|---:|---:|",
     ]
     for item in report["aggregates"]:
-        averages = item["dimensionAverages"]
+        averages = item["scoreGroupAverages"]["responseCompletenessHelpfulness"]
         display = lambda value: "—" if value is None else f"{value:.2f}"
         lines.append(
             "| " + " | ".join(
@@ -151,8 +187,28 @@ def markdown(report: dict) -> str:
                     item["evaluatorType"], item["generatorId"], item["condition"], item["category"],
                     str(item["responseCount"]), str(item["judgmentCount"]),
                     display(averages["accuracy"]), display(averages["completeness"]),
-                    display(averages["attribution"]), display(averages["edgeCaseHandling"]),
-                    display(averages["conflictHandling"]), display(averages["uncertainty"]),
+                    display(averages["helpfulness"]), display(averages["edgeCaseHandling"]),
+                    display(averages["conflictHandling"]),
+                ]
+            ) + " |"
+        )
+    lines.extend([
+        "",
+        "## Source handling",
+        "",
+        "| Evaluator | Generator | Condition | Category | Responses | Judgments | Grounding | Source coverage | Citation accuracy | Uncertainty |",
+        "|---|---|---|---|---:|---:|---:|---:|---:|---:|",
+    ])
+    for item in report["aggregates"]:
+        averages = item["scoreGroupAverages"]["sourceHandling"]
+        display = lambda value: "—" if value is None else f"{value:.2f}"
+        lines.append(
+            "| " + " | ".join(
+                [
+                    item["evaluatorType"], item["generatorId"], item["condition"], item["category"],
+                    str(item["responseCount"]), str(item["judgmentCount"]),
+                    display(averages["groundedness"]), display(averages["sourceCoverage"]),
+                    display(averages["citationAccuracy"]), display(averages["uncertainty"]),
                 ]
             ) + " |"
         )
@@ -160,16 +216,18 @@ def markdown(report: dict) -> str:
         "",
         "## Paired human-review differences",
         "",
-        "| Generator | Case | Documentation | AIPP | Difference |",
-        "|---|---|---:|---:|---:|",
+        "| Generator | Case | Response difference | Source-handling difference |",
+        "|---|---|---:|---:|",
     ])
     for item in report["pairedComparisons"]:
+        response = item["scoreGroups"]["responseCompletenessHelpfulness"]
+        source = item["scoreGroups"]["sourceHandling"]
         lines.append(
-            f"| {item['generatorId']} | {item['caseId']} | {item['documentationScore']:.2f} | "
-            f"{item['aippScore']:.2f} | {item['difference']:+.2f} |"
+            f"| {item['generatorId']} | {item['caseId']} | {response['difference']:+.2f} | "
+            f"{source['difference']:+.2f} |"
         )
     if not report["pairedComparisons"]:
-        lines.append("| — | No complete human-reviewed pairs yet | — | — | — |")
+        lines.append("| — | No complete human-reviewed pairs yet | — | — |")
     lines.extend(["", "## Limitations", ""])
     lines.extend(f"- {item}" for item in report["limitations"])
     lines.extend(["", "## Individual results", ""])
@@ -241,7 +299,7 @@ def generate(run: Path, results: Path, review: Path, judgments_dir: Path, output
             "category": cases[item["caseId"]]["category"],
             "condition": mapping["condition"],
             "blindedCondition": item["blindedCondition"],
-            "deterministicDecision": deterministic["decision"],
+            "deterministicDecision": deterministic["decisions"]["sourceHandling"],
             "humanJudgments": humans,
         }
         individual.append(record)
@@ -251,7 +309,7 @@ def generate(run: Path, results: Path, review: Path, judgments_dir: Path, output
 
     missing = sorted(item["responseId"] for item in individual if not item["humanJudgments"])
     report = {
-        "schemaVersion": 1,
+        "schemaVersion": 2,
         "runId": import_report["runId"],
         "suiteVersion": import_report["suiteVersion"],
         "protocolVersion": import_report["protocolVersion"],

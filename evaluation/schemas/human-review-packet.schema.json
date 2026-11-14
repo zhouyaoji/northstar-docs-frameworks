@@ -6,7 +6,7 @@
   "additionalProperties": false,
   "required": ["schemaVersion", "runId", "reviewId", "question", "answer", "citations", "source", "gold", "rubric", "instructions", "judgmentTemplate"],
   "properties": {
-    "schemaVersion": {"const": 1},
+    "schemaVersion": {"const": 2},
     "runId": {"type": "string", "minLength": 1},
     "reviewId": {"type": "string", "pattern": "^review-[0-9]{3}$"},
     "question": {"type": "string", "minLength": 1},
@@ -24,12 +24,28 @@
     "gold": {
       "type": "object",
       "additionalProperties": false,
-      "required": ["expectedBehavior", "requiredClaims", "prohibitedClaims"],
+      "required": ["responseCompletenessHelpfulness", "sourceHandling"],
       "properties": {
-        "expectedBehavior": {"enum": ["answer", "qualified-answer", "identify-conflict", "abstain"]},
-        "rationale": {"type": "string"},
-        "requiredClaims": {"type": "array", "items": {"$ref": "#/$defs/claim"}},
-        "prohibitedClaims": {"type": "array", "items": {"$ref": "#/$defs/claim"}}
+        "responseCompletenessHelpfulness": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": ["completeClaims", "prohibitedClaims", "exampleAnswer"],
+          "properties": {
+            "completeClaims": {"type": "array", "items": {"$ref": "#/$defs/claim"}},
+            "prohibitedClaims": {"type": "array", "items": {"$ref": "#/$defs/claim"}},
+            "exampleAnswer": {"type": "string", "minLength": 1}
+          }
+        },
+        "sourceHandling": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": ["expectedBehavior", "availableClaims"],
+          "properties": {
+            "expectedBehavior": {"enum": ["answer", "qualified-answer", "identify-conflict", "abstain"]},
+            "rationale": {"type": "string"},
+            "availableClaims": {"type": "array", "items": {"$ref": "#/$defs/claim"}}
+          }
+        }
       }
     },
     "rubric": {
