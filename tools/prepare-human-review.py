@@ -27,21 +27,30 @@ SCALE = {
     "not_applicable": "dimension does not apply to this case",
 }
 
-DIMENSIONS = {
-    "accuracy": "Are the factual statements supported by the supplied source?",
-    "completeness": "Does the answer include the required claims for this case?",
-    "attribution": "Do the citations support the answer and stay within the supplied source?",
-    "edgeCaseHandling": "Does the answer handle the case-specific edge condition safely?",
-    "conflictHandling": "Does the answer identify unresolved disagreement when the case requires it?",
-    "uncertainty": "Does the answer abstain or qualify its conclusion when the evidence is insufficient?",
+DIMENSION_GROUPS = {
+    "responseCompletenessHelpfulness": {
+        "accuracy": "Is the response factually correct against the complete verified answer requirements?",
+        "completeness": "Does the response include the complete verified claims, regardless of source condition?",
+        "helpfulness": "Does the response directly and usefully answer the user's question?",
+        "edgeCaseHandling": "Does the response handle the case-specific edge condition safely?",
+        "conflictHandling": "Does the response identify unresolved disagreement when the complete evidence requires it?",
+    },
+    "sourceHandling": {
+        "groundedness": "Are the response's claims supported by the source it received?",
+        "sourceCoverage": "Does the response use the relevant information available in that source?",
+        "citationAccuracy": "Do the citations accurately support the response and stay within the supplied source?",
+        "uncertainty": "Does the response qualify or abstain when its assigned source is insufficient?",
+    },
 }
 
 INSTRUCTIONS = [
     "Review only the question, supplied source, gold requirements, and answer in this packet.",
     "Do not attempt to identify the source condition or answer-generating model.",
+    "Score response completeness and helpfulness against the common complete requirements.",
+    "Score source handling against only the information available in the supplied source.",
     "Score each dimension from 0 to 4, or use not_applicable when the dimension does not apply.",
     "Use a reviewer role, not a personal name, in evaluator.identity.",
-    "Replace the template scores, decision, notes, evidence, and evaluatedAt as appropriate.",
+    "Replace the template scores, decisions, notes, evidence, and evaluatedAt as appropriate.",
     "Return the completed judgmentTemplate as one standalone JSON file.",
 ]
 
@@ -70,13 +79,19 @@ def iso_time(value: str | None) -> str:
 
 def judgment_template(run_id: str, review_id: str, created_at: str) -> dict:
     return {
-        "schemaVersion": 1,
+        "schemaVersion": 2,
         "runId": run_id,
         "responseId": review_id,
         "evaluator": {"type": "human", "identity": "reviewer-role"},
-        "rubricVersion": "answer-quality-1.0.0",
-        "scores": {dimension: "not_applicable" for dimension in DIMENSIONS},
-        "decision": "needs-review",
+        "rubricVersion": "answer-quality-1.1.0",
+        "scores": {
+            group: {dimension: "not_applicable" for dimension in dimensions}
+            for group, dimensions in DIMENSION_GROUPS.items()
+        },
+        "decisions": {
+            "responseCompletenessHelpfulness": "needs-review",
+            "sourceHandling": "needs-review",
+        },
         "notes": "Replace with a concise explanation of the scores.",
         "evidence": ["Replace with specific supported or unsupported claims."],
         "evaluatedAt": created_at,
@@ -114,7 +129,7 @@ def prepare(run: Path, results: Path, output: Path, seed: int, created_at: str) 
         expectation = case["expectations"][condition]
         claims = {claim["id"]: claim for claim in case.get("claims", [])}
         review_packet = {
-            "schemaVersion": 1,
+            "schemaVersion": 2,
             "runId": manifest["runId"],
             "reviewId": review_id,
             "question": packet["question"],
@@ -125,18 +140,27 @@ def prepare(run: Path, results: Path, output: Path, seed: int, created_at: str) 
                 "content": packet["source"]["content"],
             },
             "gold": {
-                "expectedBehavior": expectation["behavior"],
-                **({"rationale": expectation["rationale"]} if expectation.get("rationale") else {}),
-                "requiredClaims": [
-                    {"id": claim_id, "text": claims[claim_id]["text"]}
-                    for claim_id in expectation.get("requiredClaimIds", [])
-                ],
-                "prohibitedClaims": [
-                    {"id": claim["id"], "text": claim["text"]}
-                    for claim in case.get("prohibitedClaims", [])
-                ],
+                "responseCompletenessHelpfulness": {
+                    "completeClaims": [
+                        {"id": claim["id"], "text": claim["text"]}
+                        for claim in case.get("claims", [])
+                    ],
+                    "prohibitedClaims": [
+                        {"id": claim["id"], "text": claim["text"]}
+                        for claim in case.get("prohibitedClaims", [])
+                    ],
+                    "exampleAnswer": case["exampleAnswer"],
+                },
+                "sourceHandling": {
+                    "expectedBehavior": expectation["behavior"],
+                    **({"rationale": expectation["rationale"]} if expectation.get("rationale") else {}),
+                    "availableClaims": [
+                        {"id": claim_id, "text": claims[claim_id]["text"]}
+                        for claim_id in expectation.get("requiredClaimIds", [])
+                    ],
+                },
             },
-            "rubric": {"version": "answer-quality-1.0.0", "scale": SCALE, "dimensions": DIMENSIONS},
+            "rubric": {"version": "answer-quality-1.1.0", "scale": SCALE, "dimensions": DIMENSION_GROUPS},
             "instructions": INSTRUCTIONS,
             "judgmentTemplate": judgment_template(manifest["runId"], review_id, created_at),
         }

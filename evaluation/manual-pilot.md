@@ -78,7 +78,7 @@ python3 tools/prepare-human-review.py \
   --seed 20261102
 ```
 
-Reviewers must not be told the answer generator or source condition. A person who helped produce or repair an answer must not be that answer's only reviewer. Store completed judgment files in `human-review/judgments/`.
+Reviewers must not be told the answer generator or source condition. They score response completeness and helpfulness against the common verified requirements, then score source handling against the information available in the supplied source. These groups remain separate in the reports. A person who helped produce or repair an answer must not be that answer's only reviewer. Store completed judgment files in `human-review/judgments/`.
 
 ## 7. Generate reports
 

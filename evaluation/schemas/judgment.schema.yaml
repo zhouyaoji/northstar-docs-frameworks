@@ -3,9 +3,9 @@ $id: https://zhouyaoji.github.io/northstar-docs-frameworks/evaluation/schemas/ju
 title: Northstar answer-quality judgment
 type: object
 additionalProperties: false
-required: [schemaVersion, runId, responseId, evaluator, rubricVersion, scores, decision, evaluatedAt]
+required: [schemaVersion, runId, responseId, evaluator, rubricVersion, scores, decisions, evaluatedAt]
 properties:
-  schemaVersion: {const: 1}
+  schemaVersion: {const: 2}
   runId: {type: string, minLength: 1}
   responseId: {type: string, minLength: 1}
   evaluator:
@@ -22,15 +22,34 @@ properties:
   scores:
     type: object
     additionalProperties: false
-    required: [accuracy, completeness, attribution, edgeCaseHandling, conflictHandling, uncertainty]
+    required: [responseCompletenessHelpfulness, sourceHandling]
     properties:
-      accuracy: {$ref: '#/$defs/score'}
-      completeness: {$ref: '#/$defs/score'}
-      attribution: {$ref: '#/$defs/score'}
-      edgeCaseHandling: {$ref: '#/$defs/score'}
-      conflictHandling: {$ref: '#/$defs/score'}
-      uncertainty: {$ref: '#/$defs/score'}
-  decision: {enum: [pass, needs-review, fail]}
+      responseCompletenessHelpfulness:
+        type: object
+        additionalProperties: false
+        required: [accuracy, completeness, helpfulness, edgeCaseHandling, conflictHandling]
+        properties:
+          accuracy: {$ref: '#/$defs/score'}
+          completeness: {$ref: '#/$defs/score'}
+          helpfulness: {$ref: '#/$defs/score'}
+          edgeCaseHandling: {$ref: '#/$defs/score'}
+          conflictHandling: {$ref: '#/$defs/score'}
+      sourceHandling:
+        type: object
+        additionalProperties: false
+        required: [groundedness, sourceCoverage, citationAccuracy, uncertainty]
+        properties:
+          groundedness: {$ref: '#/$defs/score'}
+          sourceCoverage: {$ref: '#/$defs/score'}
+          citationAccuracy: {$ref: '#/$defs/score'}
+          uncertainty: {$ref: '#/$defs/score'}
+  decisions:
+    type: object
+    additionalProperties: false
+    required: [responseCompletenessHelpfulness, sourceHandling]
+    properties:
+      responseCompletenessHelpfulness: {enum: [pass, needs-review, fail, not_applicable]}
+      sourceHandling: {enum: [pass, needs-review, fail, not_applicable]}
   notes: {type: string}
   evidence:
     type: array

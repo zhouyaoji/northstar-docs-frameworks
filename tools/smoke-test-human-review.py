@@ -46,10 +46,19 @@ def main() -> int:
         manifest = load_json(review / "share" / "manifest.json")
         for entry in manifest["reviews"]:
             packet = load_json(review / "share" / entry["file"])
+            expected_groups = {"responseCompletenessHelpfulness", "sourceHandling"}
+            if set(packet["gold"]) != expected_groups or set(packet["rubric"]["dimensions"]) != expected_groups:
+                raise RuntimeError("human-review packet did not separate response and source scoring")
             judgment = packet["judgmentTemplate"]
             judgment["evaluator"]["identity"] = "documentation-reviewer"
-            judgment["scores"] = {dimension: 4 for dimension in judgment["scores"]}
-            judgment["decision"] = "pass"
+            judgment["scores"] = {
+                group: {dimension: 4 for dimension in dimensions}
+                for group, dimensions in judgment["scores"].items()
+            }
+            judgment["decisions"] = {
+                "responseCompletenessHelpfulness": "pass",
+                "sourceHandling": "pass",
+            }
             judgment["notes"] = "Synthetic judgment used only to test report mechanics."
             judgment["evidence"] = ["smoke-test-fixture"]
             write_json(judgments / f"{entry['reviewId']}.json", judgment)
@@ -72,7 +81,13 @@ def main() -> int:
             raise RuntimeError(f"unexpected human-review coverage: {report['coverage']}")
         if len(report["pairedComparisons"]) != expected // 2:
             raise RuntimeError("comparison report did not produce one paired result per case")
-        if any(item["difference"] != 0 for item in report["pairedComparisons"]):
+        if any(set(item["scoreGroups"]) != expected_groups for item in report["pairedComparisons"]):
+            raise RuntimeError("paired comparison did not preserve both score groups")
+        if any(
+            comparison["difference"] != 0
+            for item in report["pairedComparisons"]
+            for comparison in item["scoreGroups"].values()
+        ):
             raise RuntimeError("equal synthetic judgments should produce zero paired differences")
         if not (comparison / "comparison-report.md").exists():
             raise RuntimeError("Markdown comparison report was not generated")
